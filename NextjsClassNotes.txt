@@ -1,0 +1,153 @@
+Mobile -Smart Phones - 2005
+
+web client ------------------------>Webservice
+  Apps-require data<--------------------XML--fall of XML Based webservices......
+
+Different data format
+very light weight data format
+only http as core transport
+  -RESTFull webservice - Roy fielding.
+
+JSON...........
+
+DATA DRIVEN DRIVEN SERVERS----WEB SERVER ONLY RETURNS DATA IN form of json or xml ....
+
+
+dynamic content web app - talks to data base directly
+
+dynamic content web app (USER interface) - webservice----talks to data base
+
+
+dynamic content web app (USER interface) - server side (php,asp.net,servlets/jsp)
+          |
+ 
+client-1-------webserver--prepare html page
+
+client-1000-----webserver---prepare html for 1000 clients.........
+
+
+
+SPA - Spec introduced by w3c AS PART OF HTML 5 Spec
+
+ Building USER interface apps using javascript at client side instead of server side...
+
+dynamic content web app (USER interface) -preparing html pages at client side  - client side (js) -----webservice---datasource..
+
+
+FULL Stack?
+
+one language one framework building - 
+
+Dynamic web app model
+
+ aspx -----V
+ M/C ----c# 
+
+react/ng/vue ---view---------> java/.net/php/python etc...
+
+react--------------------|...net
+
+react-front end
+react also back end ->Full stack.
+
+React extended to act as back end and front end 
+
+Using react you can create webservices...
+Using react you can generate html pages at both server and client
+
+NEXT.JS => React framwork which extends react for server and client..
+
+
+NEXT JS
+  ->SPA at client
+  ->SSR AT Server side - Full SSR..
+
+
+=>Full Stack apps: =>Full SSR(Next.js)
+   Using react like apps are built using full stack apps=>Next js
+
+....................................................................................
+			 HTML Prepartion
+
+
+static sites:
+1.Hard coded html page preparation by hand - first generation technology...
+
+pros:
+ ->It is super fast.
+cons:
+  Hard coded html pages are really hard.
+  Page update is really very hard.
+
+Dynamic sites:
+
+ Prepare html pages dynamically--- via Special programs-(java,.net)
+
+When the pages are prepared?
+
+ => when client requests , server receives requests , then prepares HTML Pages.- DCGT
+pros:
+ ->page is prepared dynamically so that your app is live..
+ ->Always we get latest information.
+
+cons:
+ ->web server load would be heavy, webserver may receives 1000's of requests which degrades performances.
+  Thats where SPA Were created...BUT SPA has its own drawbacks....
+
+i want to prepare html pages dynamically at server , but 
+  ->i need performance
+  ->i need client side interactions like spa...
+
+High Performance + SPA => JAMSTACK
+
+ => "During BUILD PHASE" - SSG - Static Site Generation.
+
+Server side rendering can be done "ahead of time"-->SSG.This means we can pre render an entire application into HTML and serve them as static files.
+This improves site performance and makes deployment a lot simpiler we no longer need to dynamically render pages on request.
+.....................................................................................
+			  Rendering
+			    |
+	-----------------------------------------------------------
+      CSR                                               SSR
+						         |
+					-------------------------------------
+					Request           build time    build+request
+					 |                |             |
+				      Full SSR            SSG           ISR
+
+NEXT Supports all types of rendering, you can mix and match based on your app use cases......
+
+
+can you run e6 module keywords directly inside node.js
+
+util.js
+
+export const name='google'
+
+index.js
+
+import {name} from './util.js'
+console.log(name)
+
+node index.js
+
+two config
+
+package.json
+
+ "type" :"module"
+
+or
+util.mjs -module js - understood by node...
+
+
+How to start dev server
+
+> npm run dev
+
+
+ 
+
+
+
+

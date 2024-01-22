@@ -1,0 +1,367 @@
+				Next js
+.....................................................................................
+
+What is a Next?
+	 Next is a flexible React framework that gives you building blocks to create fast "web applications".
+
+Web Applications:
+.................
+
+What is web app?
+  Type of distributed app,deployed at server , accessed over network(internet) vi various network protocals like http,tcp,smtp...
+  
+  Web apps works based on request and response model.
+  Web apps are hosted on server called web server.
+
+Web server receives request , runs a program, that program returns response to the client.
+
+Response would be document.
+=>HTML
+ 
+other responses types
+XML,JSON,Documents,images,vidoes.........
+
+
+What is web and why it was created?
+
+  Tim Berners-Lee, a British scientist, invented the World Wide Web (WWW) in 1989, while working at CERN. The web was originally conceived and developed to meet the demand for automated information-sharing between scientists in universities and institutes around the world.
+
+The first Web browser is line mode web browser,launched in 1992.
+
+The first web server is NeXT computer
+
+The first web page , lanuched http://info.cern.ch/hypertext/WWW/TheProject.html.
+
+Types of Web application:
+
+1.Static web applications - 1989 to 1995 (Now a days also people are building this type apps)
+   Hard coded html pages , prepared html pages  kept at webserver , the webserver will send those html pages to clients(browsers)
+
+
+2.Dynamic Content generation application(1996 to till date)
+
+  After 1995, many people thought that how we can use web for biz information system
+
+ how to share biz informations via internet.
+ Generally biz data is stored in databases , how to embed data base data into html pages
+
+ 1.web server need to talk to database
+ 2.web server need to prepare html pages based on database records
+ 3.Those information must be transported to web clients.
+
+Web server core design to get client request and send html response to the client.
+
+Along with web server, something was introduced called "Programming language runtime"
+
+The first run time was created based on "c" language called "CGI-comman Gate way interface" later instead of c language "PERL" language.
+
+3.Web services-1998 to till date
+
+ Rise of ECommerce, using internet and web how to exchange data between two biz organizations.
+ The existing html technology was not suitable to send and recive data because html is just user interface document language.
+
+ We need to data to be exechanged, thats where new data model was created called 'XML'
+xml based web apps called web services.
+
+soap protocal was created to transfer XML based documents "SOAP based webservices"
+
+After 2005 soap based web services, started failing due to mobile computing.
+
+New Web services  were designed called "RestFull Web services"
+
+Restfull web services were used to build any type of data formats like json,xml,pdf,html etc...
+
+
+
+4.Client side web apps called "Single Page Web Apps"(2007 to till date)
+
+Single page web apps are built using javascript at client side where as server side web services(REST apis) are used.
+
+SPA Tech stack:
+HTML 5,CSS 3, Javascript.
+Frameworks build based on SPA
+
+1.Angular js
+2.react
+3.vue js
+.....................................................................................
+			  React as SPA lib
+.....................................................................................
+
+Reactjs was created by facebook , in order to build SPA applications for browsers.
+
+Advantages of SPA:
+1.Pages are created  at client side, so server load is completly removed
+2.SPA reduces the lot of phsyical pages after deployment.
+3.Clear separations of concerns.
+
+Drawbacks of SPA:
+.................
+
+Pure client SPAs are problematic when the app is senstive to SEO and time-to concept
+This is because the browser will recive a large empty HTML page and has to wait until the javascript is loaded before rendering any thing.
+
+The brith of new Technology called  "SSR" -  Server Side Rendering:
+..................................................................................
+ I need SEO but at the same time, i want to use SPA as well.
+
+We provides first class api to "render"  an SPA app into HTML strings on the server.
+This allows server to send back already rendered HTML, allowing end users to see the content immediately while the javascript is being downloaded.
+
+This process is called "hydration", the app is compiled at server side and sent to the client which will be  interactive.
+
+.....................................................................................
+			SSR types
+
+Server side Rendering(preparation -Page Preparation(html))
+-HTML is prepared at client side only- pure spa
+-HTML is prepared at server and client - SSR
+
+
+=>Partil SSR 
+     We have SPA already, but only few pages(index.html) page is pre compiled at server and sent to client , from where client apps(spa) starts working.
+
+Generally React has api called "ReactDOMServer" using this api we have to render html page on node js(express/hapi)
+ 
+=>Full SSR
+     Every thing is compiled at server side , where as client logics like api calls using ajax , user interactions like form submission,ui animations, is done at client side once the app is rendered.
+
+
+SSG/JAMStack: (Static Site Generation)
+......................................
+
+What is Jamstack?
+Jamstack is an architectural approach that decouples the web experience layer from data and business logic, improving flexibility, scalability, performance, and maintainability.
+
+Jamstack removes the need for business logic to dictate the web experience.
+
+Just sending HTML pages to the client without preparing htmls pages while requesting.
+
+
+
+SSR will prepare html at server side during "request-response  phase/cycle"
+
+Server side rendering can be done "ahead of time"-->SSG.This means we can pre render an entire application into HTML and serve them as static files.
+This improves site performance and makes deployment a lot simpiler we no longer need to dynamically render pages on request.
+
+....................................................................................
+
+client------------request----------------server---prepares page(production)
+
+dev--source code-----push --- build stage----prepares the app---push into production server --100 page1.html.....page100.html
+
+client------------request ------------------server --- prepared page
+
+ssg.
+
+Once the app in production, what if there is data change,then app is already prepared and kept production.
+
+what if  the updated data we need in pages?
+
+  => We need to rebuild the whole app
+      once the app in production, if there is new build, we need to stop existing app in production, we need to redeploy the app
+
+
+ =>ISR - Incremental Static Rendering
+
+  SSG - Build time
+  SSR - Request time
+  SSG+SSR = build time+request time = ISR
+
+....................................................................................
+			   Next js  -SSR and SSG
+.....................................................................................
+
+Next js is full stack web framwork built on the top of react core features  to build modern SSG and SSR apps at very fast...
+
+
+Next js Architecture:
+...........................
+
+Next js uses "Rust based build system" where as react uses web pack build ....
+
+What is Rust?
+ It is programming langugage, used to build Nextjs apps. Next core engine is written in Rust only.
+
+Next.js Compiler:
+..................
+ Next js Compiler is written using RUST Using SWC (Speedy Web Compiler).
+
+SWC allows next js to transform and minify the js code for production. This replaces babel.
+
+SWC is 17x faster than Babel, it is embeded inside next js
+....................................................................................
+		NEXT JS Getting Started
+.....................................................................................
+
+How to install next js and how to create app?
+
+System Req:
+
+1.Node.js 16.8 or later
+2.OS - any os
+3.vs code.
+
+npx create-next-app@latest
+
+E:\session\TADigital>npx create-next-app@latest
+Need to install the following packages:
+create-next-app@14.1.0
+Ok to proceed? (y) y
+√ What is your project named? ... my-app
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\my-app.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+
+added 137 packages, and audited 138 packages in 14s
+
+33 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+Initialized a git repository.
+
+Success! Created my-app at E:\session\TADigital\my-app
+
+
+E:\session\TADigital>cd my-app
+
+E:\session\TADigital\my-app>code .
+.....................................................................................
+			 Project Structure
+.....................................................................................
+package.json
+
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.1.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0"
+  }
+}
+scripts:
+ dev: runs next dev to start next.js in development mode
+ build: runs next build to build the application for production usage
+ start: runs next start to start a next apps in production mode.
+ lint: runs next lint to set up next built in eslint configuration.
+
+
+next.config.mjs 
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+
+export default nextConfig;
+
+	It helps to configure next js server infrastructure....
+
+
+compiler configuration:
+jsconfig.json
+
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+
+tailwind configuration: (css configuration)
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
+    },
+  },
+  plugins: [],
+};
+
+postcss.config.js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+
+public:
+  stores static assests such images,fonts,documents
+  public dir are accessed inside code using the base URL "/".
+
+
+src/app 
+  Where application code is available....
+  
+ layout.js
+ page.js
+ global.css
+Note: which is similar to index.js and App.js in react.
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
