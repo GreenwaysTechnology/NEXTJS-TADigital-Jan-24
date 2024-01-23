@@ -146,8 +146,36 @@ How to start dev server
 > npm run dev
 
 
+component hierachy in react:
+
+Normal Composition:
+
+const Hello =()=><h1>Hello</h1>
+const Greeter = ()=><Hello/>
+
+const App=()=> <Greeter />
+
+
+Component as props and compostion:
+
+const Hello =()=><h1>Hello</h1>
+const Greeter = ()=> {props.children}
+
+const App=()=> <Greeter>
+   <Hello/>
+ </Greeter>
  
 
+component hiearchy in next
 
+const Layout =(props)=><html>
+	<body>{props.children}</body>
+ </html>
 
+page.js
+ const Page=()=><div></div>
+
+<Layout>
+    <Page/>
+</Layout>
 

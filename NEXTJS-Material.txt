@@ -449,57 +449,599 @@ src/app/page.js
 export default function HomePage() {
 
   return <div>
-    <h1>Welcome to TADigital</h1>
+     <h1>Welcome to TADigital</h1>
   </div>
 }
 
 1.every function must be exported using "export default only"
 2.It should return home page content.
 3.It will inserted into layout automatically.
-.....................................................................................				Layouts and Routing & Pages
+
+File Conventions:
+
+ Next.js provides a set of special files to create APP.
+ Each File has specific meaning
+
+layout.js 
+  Shared UI For a segment and its children.
+  if layout.js present inside src/app folder which is called root layout.
+  Every Next.js app must have one layout.js which is root layout file.
+
+nestedlayout
+  layout.js
+   Shared UI For a segment and its children.
+   when you define routing , that means folder src/app/products,you can have    layout.js which defines the nested layout, that means , the layout inside another    layout
+ 
+Note: root layout is going to have root html content.
+      sub/nested layouts would have div element.
+
+eg:
+ <html>
+  <head> 
+    <title>This is my page</title>
+  </head>
+  <body>
+	<HomePage>
+	<div> -->Nested layout..
+  </body>   
+ </html>
+
+2.page.js
+   Unique UI of a route, meaning the page is mapped against routing like / - index, /products
+
+3.loading.js
+   Loading UI (Spinner) for a segement and its children
+
+4.not-found.js
+   Not Found UI for a segement and its children
+   if routing is failed to map against a page, then next.js will show error page.
+5.error.js
+    it is used to show custom compoent logic errors.
+    
+6.global-error 
+  error.js
+   if you define error handler globally, it is called global error page.
+
+Note: 
+  All error  files are represented by "React ErrorBoundary"
+
+7.route.js
+   You can write "RESTFull WebService"
+
+8.template.js
+   Specialized re-rendered Layout UI.
+
+9.default.js
+   Fallback UI for "Parrel Routes"
+
+
+Note:
+ When we write next application, every thing is component
+  Error is component
+  Loading is Compoent
+  Page is component
+  Layout is compoent.
+
+Since Everything is compoent , which forms component hierachy.
+
+React dev tool can used to look into the component hiearchy....
+
+Using react dev tool we can look , next application....
+
+
+Component Structure/Hierarchy:
+..............................
+
+<Layout>
+   <Template>
+	<ErrorBoundary fallback={<Error/>}>
+	   <Suspense fallback={<Loading/>}>
+		<ErrorBoundary fallback={<NotFound/>}
+		    <Page/>	
+		<ErrorBoundary>
+           <Suspense>	
+        </ErrorBoundary>
+   </Template>	
+</Layout>
+.....................................................................................					 Layouts and Routing & Pages
+				Routing
 .....................................................................................
 
+Routing:
+  The skeleton of every next application is routing.
+
+ Inside the app directory, "folders" are used to define routes
+
+src/app/ ----- index route/home route
+
+Each folder represents a "route segment" that maps to a "URL" segement. in order to created route you can nest folders inside each other
+
+URL Pattern:
+
+localhost:3000 /    
+	       |
+            Root segment
+
+Segment means part of url.
 
 
+localhost:3000 /     dashboard /settings
+		       |            |              
+	Root segment  Segment   leaf Segment
 
+How to create segments(eiether root/segement/leaf)?
+  A special file called page.js to make route segments publicly accessible.
 
+if you different name other than page.js , it will not be available for public access.
 
+ app/dashboard/config/myconfig.js
 
+http://localhost:3000/dashboard/config/myconfig - It will throw error.
 
+Lab:
+ How to create nested route
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+src/app/hello/page.js  ===> http://localhost:3000/hello
  
+folder name becomes the url name.
+
+http://localhost:3000/hello , it maps against page.js
+
+src/app/hello/page.js
+
+export default function HelloPage() {
+    return <div id="HelloPage">
+        <h1>Hello Page</h1>
+    </div>
+}
+
+
+What if i have folder, but no page.js,
+
+src/app/hello == http://localhost:3000/hai
+
+ if no page.js found, then it will throw "404 Page Not Found" , that means next automatically fallback to "ErrorBoundary" , it maps against default notfound.js message.
+
+
+Layouts and Pages:
+
+1.Every next app must have root layout.
+2.you can define nested layout to share for a segment.
+
+Lab:
+ I want to define a layout for hello and hai separtelly.
+
+src/app/hello/layout.js
+
+export default function HelloLayout({ children }) {
+    return <div id="hellolayout">
+        {children}
+    </div>
+}
+
+src/app/hello/page.js
+
+export default function HelloPage() {
+    return <div id="HelloPage">
+        <h1>Hello Page</h1>
+    </div>
+}
+
+http://localhost:3000/hello
+
+<div id="rootlayout">
+   <div id="hellolayout">
+     <div id="HelloPage">
+      <h1>Hello Page</h1>
+	</div>
+     </div>
+</div>
+
+Deep Nesting:
+.............
+src/app/greet/welcome/hello
+
+src/app/greet/layout.js
+
+export default function GreetLayout({ children }) {
+    return <div id="greetLayout">
+        {children}
+    </div>
+}
+src/app/greet/page.js
+export default function GreetPage() {
+    return <div id="GreetPage">
+        <h1>Greet Page</h1>
+    </div>
+}
+
+src/app/greet/welcome/layout.js
+
+export default function WelcomeLayout({ children }) {
+    return <div id="welcomeLayout">
+        {children}
+    </div>
+}
+src/app/greet/welcome/page.js
+
+export default function WelcomePage() {
+    return <div id="welcome">
+        <h1>Welcome Page</h1>
+    </div>
+}
+
+src/app/greet/welcome/hello/layout.js
+
+XXXXXX
+
+src/app/greet/welcome/hello/page.js
+        
+export default function HelloPage() {
+    return <div id="HelloPage">
+        <h1>Hello Page</h1>
+    </div>
+}
+
+As of now we have discussed basic routing 
+  =>Index route
+  =>Nested Route
+  =>Deep Nested Route
+  =>Root layout and nested layouts
+
+We will explore advanced routing patterns
+.............................................................................................
+			     Compoent Types && Rendering Types
+............................................................................................
+
+Rendering is nothing but page prepartion (html creation)
+
+How to create html and where to create html?
+
+Where:
+ Rendering can take place on the server or on the client.
+
+When:
+At Server Side:
+  It can happen either ahead of time at build time, 
+  or on every request at runtime. 
+
+With Next. js, three types of rendering methods are available
+  
+1.Server-Side Rendering, 
+  1.0. Request time
+  1.1. Static Site generation
+  1.2. ISR - Incremental static rendering = Build time + runtime
+
+3.Client-Side Rendering
+   Preparing portion of page at client side. which is similar to SPA applications
+
+
+Component types:
+ Based on Rendering we can classlify the components into two category
+
+ 1.Server components 
+    Components are rendered at server side 
+ 2.Client components 
+   Components are rendered at client side 
+
+   By default all components are "Server rendered Components".
+
+Page,layouts,templates,errors,notfound,loading,default all are server compoents by default.
+............................................................................................
+			  Client Components
+.............................................................................................
+
+Generally React application is component driven.
+Component which may have logic to interact with user, like button clients,typing, animations,
+that means any dom manipulation.
+
+Co-location:
+  Apart from the special files you can co-locate , other files such as components,css,test files,utility files within app folder or subfolder/nested folder.
+eg: 
+src/app/review/like.jsx
+
+Can i write state mutations inside next, like react using hooks?
+
+Yes.
+
+src/app/review/like.jsx
+
+export const Like = props => {
+    return <div>
+        <h1>Like</h1>
+    </div>
+}
+
+
+src/app/review/page.js
+
+import { Like } from "./like"
+
+export default function ReviewPage() {
+    return <div id="rootPage">
+        <h1>Review Page</h1>
+        <Like />
+    </div>
+}
+
+The above code ReviewPage has Like component
+
+ <ReviewPage>
+	<Like/>
+ </Review>
+
+Adding Button and useState Hook, Listener:
+..........................................
+
+import { useState } from "react"
+
+export const Like = props => {
+    const [like, setLike] = useState(0)
+    return <div>
+        <h1>Like {like}</h1>
+    </div>
+}
+
+After adding this code, next compiler throws an error:
+
+× You're importing a component that needs useState. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+  │ Learn more: https://nextjs.org/docs/getting-started/react-essentials
+  │
+  │
+   ╭─[E:\session\TADigital\my-app\src\app\review\like.jsx:1:1]
+ 1 │ import { useState } from "react"
+   ·          ────────
+ 2 │
+ 3 │ export const Like = props => {
+ 3 │     const [like, setLike] = useState(0)
+
+
+Why this error?
+  
+ Server not able render the above code, the reason is the code is subject browser rendering that means, client side rendering.
+
+
+in order to compile we need to use directive , called "use client"
+
+soultion:
+
+"use client"
+
+import { useState } from "react"
+
+export const Like = props => {
+    const [like, setLike] = useState(0)
+    const onLike = () => {
+        console.log('Like')
+        setLike(like + 1)
+    }
+    return <div>
+        <h1>Like {like}</h1>
+        <button onClick={onLike}>Like</button>
+    </div>
+}
+
+Why client Rendering? Benefits of Client Rendering:
+...................................................
+
+1.Interactivity:
+  Client Components can use useState,useEffect,event listeners, meaning that they can provide immediate feedback to the user and update the UP
+
+2.Browser Api
+   Clients components can access browser apis like, geolocation, or localStorage allowing you to build UI for specific use cases
+.............................................................................................
+			 Patterns for client and server compoents
+
+1.Server component uses client compoents
+2.Client component uses another Server Components
+3.Client uses another Client Components
+
+
+1.Server component uses client compoents
+  
+Client:
+ src/app/review/review.jsx
+
+"use client"
+
+import { useState } from "react"
+
+export const Like = props => {
+    const [like, setLike] = useState(0)
+    const onLike = () => {
+        console.log('Like')
+        setLike(like + 1)
+    }
+    return <div>
+        <h1>Like {like}</h1>
+        <button onClick={onLike}>Like</button>
+    </div>
+}
+Server:
+src/app/review/page.jsx
+import { Like } from "./like"
+
+export default function ReviewPage() {
+    console.log('Review Page')
+    return <div id="rootPage">
+        <h1>Review Page</h1>
+        <Like />
+    </div>
+}
+
+Note:
+ if server uses client , the client component must be marked with "use client" directive
+..............................................................................................
+
+2.Client uses another Server component:
+
+   if client uses Server,Server Component automatically becomes client component
+   This pattern is not recommended, because we loose server rendering feature
+
+src/app/review/myreivew.jsx
+
+"use client"
+
+import { useState } from "react"
+//user server component
+import { Dislike } from "./dislike"
+
+export const MyReview = props => {
+    const [like, setLike] = useState(0)
+    const onLike = () => {
+        console.log('Like')
+        setLike(like + 1)
+    }
+    return <div>
+        <h1>Like {like}</h1>
+        <button onClick={onLike}>Like</button>
+        <Dislike />
+    </div>
+}
+
+src/app/review/dislike.jsx
+
+export const Dislike = props => {
+    console.log('dislike')
+    return <div>
+        <h1>DisLike</h1>
+    </div>
+}
+
+What if client uses server component but at the same time, i dont want loose server rendering feature?
+
+Yes , You can
+  Pass Server Component as prop to child Component
+
+<Client>
+	<Server/>
+</Client>
+
+steps:
+src/app/client/page.js
+
+
+import MyClient from "./myclient"
+import MyServer from "./myserver"
+
+export default function ClientPage() {
+    return <div>
+        <h1>Client Page</h1>
+        {/* <MyClient /> */}
+        {/* Pass Server compoent as prop to Child Compoent */}
+        <MyClient>
+            <MyServer />
+        </MyClient>
+    </div>
+}
+
+src/app/client/myserver.jsx
+//server compoent
+export default function MyServer() {
+
+    return <div>
+        <h1>Server Component</h1>
+    </div>
+}
+
+src/app/client/myclient.jsx
+
+"use client"
+// import MyServer from "./myserver"
+
+export default function MyClient(props) {
+
+    return <div>
+        <h1>Client Component</h1>
+        {/* <MyServer /> */}
+        {props.children}
+    </div>
+}
+............................................................................................
+3.Client uses another Client compoent
+......................................
+
+Client can uses another client
+
+
+src/app/likes/page.js
+import { MyReview } from "./review"
+
+export default function LikePage() {
+    return <div>
+        <h1>Like and Dislike Page</h1>
+        <MyReview />
+    </div>
+}
+
+Client Compoenent uses another client called "like.jsx"
+src/app/likes/myreview.jsx
+
+'use client'
+
+import { Like } from "./like"
+
+export const MyReview = props => {
+    return <>
+        <Like></Like>
+    </>
+}
+
+src/app/likes/like.jsx
+
+'use client'
+import { useState } from "react"
+
+export const Like = () => {
+    const [like, setLike] = useState(0)
+    const onLike = () => {
+        console.log('Like')
+        setLike(like + 1)
+    }
+    return <div>
+        <h1>Like {like}</h1>
+        <button onClick={onLike}>Like</button>
+    </div>
+}
+
+Note:
+ if client uses another client component, the another component need not use "use client" directive.
+
+src/app/likes/like.jsx
+
+
+// 'use client'
+import { useState } from "react"
+
+export const Like = () => {
+    const [like, setLike] = useState(0)
+    const onLike = () => {
+        console.log('Like')
+        setLike(like + 1)
+    }
+    return <div>
+        <h1>Like {like}</h1>
+        <button onClick={onLike}>Like</button>
+    </div>
+}
+
+When this pattern will be very usefull?
+
+You are building web app using next, there would be an use case that you want to use third party ui libs like gridcompoents,tabs.......
+
+By default all third party react components are client components,
+......................................&&&&&&&&&&&&&&&&........................................
+				Advanced Routing
+..............................................................................................
+
+
+
+
+
+
+
+
+
 
 
 

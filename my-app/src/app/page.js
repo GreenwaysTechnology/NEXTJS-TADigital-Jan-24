@@ -2,8 +2,7 @@
 
 
 export default function HomePage() {
-
-  return <div>
+  return <div id="rootPage">
     <h1>Welcome to TADigital</h1>
   </div>
 }
