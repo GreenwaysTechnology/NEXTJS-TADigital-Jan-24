@@ -7,8 +7,8 @@ export default function RootLayout({ children }) {
         <nav>
           <Link href='/'>Home</Link>|
           <Link href='/profiles'>Profiles</Link> |
-          <Link href='/todos'>Todos</Link>
-
+          <Link href='/todos'>Todos</Link> |
+          <Link href='/posts'>Posts</Link>
         </nav>
         {children}
       </body>
