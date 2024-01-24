@@ -1320,6 +1320,144 @@ Note: Recommended is to use Next router apis
 			Advanced Routing - Dynamic Routes
 .....................................................................................
 
+>npx create-next-app@latest
+√ What is your project named? ... dynamic-routes
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\dynamic-routes.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+
+What is dynamic route?
+	When you don't know the exact segment names ahead of time and want to create routes from dynamic data, you can use Dynamic Segments that are filled in at request time or prerendered at build time.
+
+
+Convention:
+  A Dynamic Segment can be created by wrapping a folder's name in square brackets:    [folderName].
+   For example, [id] or [slug].
+
+  Dynamic Segments are passed as the params prop to layout, page, route, and generateMetadata functions..
+
+Use case:
+ if you want to build master detail Page.
+
+Master
+src/app/profiles/page.js
+
+Details
+src/app/profiles/[id]/page.js
+                  |
+               place holder
+
+
+URL Pattern:
+
+http://localhost:3000/profiles/1
+
+src/app/
+      profiles
+	|
+        page.js
+        layout.js
+      [id]
+         page.js
+         layout.js
+
+src/app/profiles/page.js
+
+export default function Home() {
+    return <h1>
+        Profile Page
+    </h1>
+}
+
+src/app/profiles/[id]/page.js
+
+export default function ProfileDetailsPage() {
+    return <div>
+        <h1>Profile Details</h1>
+    </div>
+}
+
+How to access Path parameters inside  Details Page?
+
+via props
+
+props.params =>{"id":"2"}
+
+eg:
+
+// export default function ProfileDetailsPage(props) {
+//     return <div>
+//         {/* <h1>Profile Details {JSON.stringify(props)}</h1> */}
+//         <h1>{props.params.id} details</h1>
+//     </div>
+// }
+
+export default function ProfileDetailsPage({ params: { id } }) {
+    return <div>
+        {/* <h1>Profile Details {JSON.stringify(props)}</h1> */}
+        <h1>{id} details</h1>
+    </div>
+}
+.....................................................................................
+		    Master Details Page Preparation using Mock Data
+.....................................................................................
+
+Steps:
+
+1.Have some mock data
+ src/app/mock-data/todos.js - Refer code
+
+2.Have Master page
+ src/app/todos/page.js
+import Link from "next/link";
+import { TODOS } from "../mock-data/todos";
+
+export default function TodosMasterPage() {
+    return <>
+        <h1>Todos Master Page</h1>
+        {/* Prepare dynamic menu */}
+        <ul>
+            {
+                TODOS.map(todo => {
+                    return <li>
+                        <Link href={`/todos/${todo.id}`}>{todo.title}</Link>
+                    </li>
+                })
+            }
+        </ul>
+    </>
+}
+3.Have details Page
+ src/app/todos/[id]/page.js
+export default function TodosDetailsPage({ params: { id } }) {
+    return <div>
+        <h1>{id} details</h1>
+    </div>
+}
+
+
+
 
 
 
