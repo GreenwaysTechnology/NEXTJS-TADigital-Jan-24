@@ -543,7 +543,7 @@ Component Structure/Hierarchy:
         </ErrorBoundary>
    </Template>	
 </Layout>
-.....................................................................................					 Layouts and Routing & Pages
+.....................................................................................				 Layouts and Routing & Pages
 				Routing
 .....................................................................................
 
@@ -732,7 +732,7 @@ Page,layouts,templates,errors,notfound,loading,default all are server compoents 
 .............................................................................................
 
 Generally React application is component driven.
-Component which may have logic to interact with user, like button clients,typing, animations,
+Component which may have logic to interact with user, like button clicks,typing, animations,
 that means any dom manipulation.
 
 Co-location:
@@ -1032,12 +1032,293 @@ You are building web app using next, there would be an use case that you want to
 By default all third party react components are client components,
 ......................................&&&&&&&&&&&&&&&&........................................
 				Advanced Routing
-..............................................................................................
+.....................................................................................
+
+>npx create-next-app@latest
+√ What is your project named? ... advanced-routing
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\advanced-routing.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+....................................................................................
+				Linking and Navigating
+...................................................................................
+
+
+				Redirection Patterns
+
+1.redirect api:
+............
+The redirect is the function allows you to redirect the user to another url.
+
+Purpose:
+  Redirect uses after a mutation or event
+Where:
+  Server Components, Server Actions,Route Handlers
+
+Status Code:
+ 307 - Temp
+ 303 - Server Actions
+
+Syntax:
+export default function update(){
+  //update logic
+  //update logic is success or failure
+  redirect('url') //navigate to the new page
+}
+Note: this will discuss later when write api handlers and server actions...
+
+
+2.permanentRedirect:
+  It is similar to redirect, but the status would be 308
+
+
+3.useRouter:
+   Client Side Navigation 
+
+4.redirects in next.config.js:
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    async redirects() {
+        return [
+            //basic redirection
+            {
+                source: '/about',
+                destination: '/',
+                permanent: true
+            },
+            {
+                source: '/myproducts',
+                destination: '/products',
+                permanent: true
+            }
+        ]
+    }
+
+};
+
+export default nextConfig;
+
+5.NextResponse.redirect:
+   Inside Middlewares
+
+.....................................................................................
+
+Client side navigation
+ userRouter,Link,History api
+Server side navigation
+ redirect,PermanentRedirect,routeConfig in next.js,
+ Api redirections -NextResponse.redirect
 
 
 
+Client Side Navigation:
+......................
+There are three ways to navigate between routes in Next.js
+
+1.Using <Link> Component
+2.Using useRouter hook
+3.Using the native history API (browser api)
+
+Note:
+  Next js provides lot of in built components
+
+Built in Components:
+1.Link
+2.Font
+3.Image
+4.Script
+
+Link:<Link> 
+
+=>Enables fast client-side navigation.
+=>It extends the HTML <a> element to provide prefetching and client navigation between routes
+=>Link is part of the pacakge called 'next/Link'
+
+Link Props:
+
+1.href - url pattern
+2.replace
+3.scroll
+4.prefetch
+
+Syntax:
+ href value can be string or object
+
+<Link href="/customer">Customer</Link>
+
+<Link href={{pathname:'/customer',query: {city:'coimbatore'}}}>Customer</Link>
 
 
+Note:  
+
+ if you want to share nav bar, site footer across the application, you have to write nav bar inside root layout.
+
+src/app/layout.js
+import Link from "next/link";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <h1>My Commerce</h1>
+        <hr />
+        <nav>
+          <Link href={{ pathname: '/customer' }}>Customer</Link> |
+          <Link href={{ pathname: '/products' }}>Products</Link>
+        </nav>
+        {children}
+      </body>
+    </html>
+  );
+}
+
+src/app/customer/page.js
+export default function CustomerPage() {
+    return <>
+        <h2>Customer Page</h2>
+    </>
+}
+src/app/customer/layout.js
+export default function CustomerLayout({ children }) {
+    return <div id="customerlayout">
+        {children}
+    </div>
+}
+
+src/app/product/page.js
+export default function ProductPage() {
+    return <>
+        <h2>Product Page</h2>
+    </>
+}
+...............................................................................
+			Code Refactoring
+
+As much as possible we can design ui based on component driven arch,that means spilt the components.
+
+src/app/Footer.jsx
+
+export default function Footer() {
+    return <>
+        <div>
+            <p>Site footer</p>
+        </div>
+    </>
+}
+src/app/navbar.jsx
+import Link from 'next/link'
+export default function NavBar() {
+    return <nav>
+        <Link href={{ pathname: '/customer' }}>Customer</Link> |
+        <Link href={{ pathname: '/products' }}>Products</Link>
+    </nav>
+}
+src/app/Header.jsx
+
+export default function Header() {
+    return <>
+        <h1>My Commerce</h1>
+        <hr />
+    </>
+
+}
+src/layout.js
+import Footer from "./Footer";
+import Header from "./Header";
+import NavBar from "./navbar";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <Header />
+        <NavBar />
+        {children}
+        <Footer />
+      </body>
+    </html>
+  );
+}
+.....................................................................................
+			useRouter Hook
+.....................................................................................
+
+useRouter hook allows you programmatically change routes from Client Compoents.
+redirect method is used to change routes in Server Components
+
+
+src/app/dashboard/Nav.jsx
+
+'use client'
+import { useRouter } from "next/navigation"
+
+export default function Nav() {
+    const router = useRouter()
+    return <>
+        <div>
+            <button onClick={() => {
+                router.push('/customer')
+            }}>Customer</button>
+            <button onClick={() => {
+                router.push('/products')
+            }}>Product</button>
+        </div>
+
+    </>
+}
+src/app/dashboard/page.js
+import Nav from './Nav'
+export default function Dashboard() {
+    return <>
+        <h1>Dashboard</h1>
+        <Nav />
+    </>
+}
+
+src/app/navbar.jsx
+import Link from 'next/link'
+export default function NavBar() {
+    return <nav>
+        <Link href={{ pathname: '/customer' }}>Customer</Link> |
+        <Link href={{ pathname: '/products' }}>Products</Link> |
+        <Link href={{ pathname: '/dashboard' }}>Dashboard</Link>
+    </nav>
+}
+....................................................................................
+			  Browser history api
+....................................................................................
+
+We can use browser's history api.
+
+window.history.pushState  === router.push
+
+Since we are using next router apis, we dont need to use raw browser apis
+
+Note: Recommended is to use Next router apis
+.....................................................................................
+			Advanced Routing - Dynamic Routes
+.....................................................................................
 
 
 

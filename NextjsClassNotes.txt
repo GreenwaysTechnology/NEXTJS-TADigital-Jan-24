@@ -166,7 +166,7 @@ const App=()=> <Greeter>
  </Greeter>
  
 
-component hiearchy in next
+component hiearch in next
 
 const Layout =(props)=><html>
 	<body>{props.children}</body>
