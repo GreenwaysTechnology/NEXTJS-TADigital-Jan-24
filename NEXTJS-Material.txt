@@ -1063,8 +1063,6 @@ Installing devDependencies:
 ....................................................................................
 				Linking and Navigating
 ...................................................................................
-
-
 				Redirection Patterns
 
 1.redirect api:
@@ -1640,7 +1638,7 @@ Multiple pages within Single Layout: Component View
 What if i want to render page conditionally? Conditional Rendering
 
 <Layout>
-    {condtion ? <ThisPage/> : <ThatPage/>}
+    {condition ? <ThisPage/> : <ThatPage/>}
 </Layout>
 
 Basic Structure:
@@ -1718,10 +1716,680 @@ http://localhost:3000/game/team
  The output would be page not found, the reason is you cant access team page publicily
 team page must be injected into "Games layout as prop".
 
+src/app/game/@anaylitics/page.js
+export default function AnalyticsPage() {
+    return <div>
+        <h1>Analytics Page</h1>
+    </div>
+}
+
+
+4.Insert Team and anayltics page content into game layout.
+
+src/app/game/layout.js
+export default function GameLayout(props) {
+    return <div id="gamelayout">
+        {/* Game Page Content */}
+        {props.children}
+        {/* Team Page Content */}
+        {props.team}
+        {/* Anaylytics Page Content */}
+        {props.anaylitics}
+    </div>
+}
+...................................................................................
+		Parallel Routing - Conditional Rendering
+...................................................................................
+
+As of now we have seen how to render multiple pages into a layout.
+Now we are going to discuss how to render page or pages into a layout based on condition.
+
+Slots:
+  Portion of UI
+  Slots are defined using named slots.
+  Slots are defined with @folder convention.
+  For eg @team,@player
+  Slots are passed as props to the shared parent layout.
+
+We render a slot based UI based on certain conditions, such as checkbox and options, authentication states.
+
+Syntax:
+
+@AdminPanel
+@UserPanel
+
+export default function MyLayout(props){
+   const isAdmin = getUser()
+   return isAdmin ? props.AdminPanel : props.UserPanel
+}
+
+src/app/panel/page.js
+
+export default function PanelPage() {
+    return <div>
+        <h1>Panel Page</h1>
+    </div>
+}
+
+
+src/app/panel/layout.js
+export default function PanelLayout(props) {
+    return <div id="PanelLayout">
+
+    </div>
+}
+
+src/app/panel/@AdminPanel/page.js
+export default function AdminPanelPage() {
+    return <div>
+        <h1>Admin Panel Page</h1>
+    </div>
+}
+src/app/panel/@UserPanel/page.js
+export default function UserPanelPage() {
+    return <div>
+        <h1>User Panel Page</h1>
+    </div>
+}
+
+src/app/panel/layout.js
+export default function PanelLayout(props) {
+    const isAdmin = false
+    return <div id="PanelLayout">
+        {/* Panel Page content */}
+        {props.children}
+        {isAdmin ? props.AdminPanel : props.UserPanel}
+    </div>
+}
+....................................................................................
+			ParrelRouting -UnMatched Routing
+...................................................................................
+
+default.js
+ You can define default.js file to render as a fallback for unmatched slots during the inital load or full page reload.
+
+src/app/panel/@UserPanel/default.js
+
+export default function DefaultPage(props) {
+    return <div>
+        <h1>Fallback Page</h1>
+    </div>
+}
+....................................................................................
+			Advanced Routing-Route Groups
+....................................................................................
+
+When ever you create folder under app dir which is exposed as a route.
+src/app/user/  ====> /user
+
+However, you can mark a folder as a "Route Group"  to prevent the folder from being included in the route's URL Path. 
+
+Which is sometimes called hidden dirs
+
+Why Route Groups:
+ =>Organize your route segments and project files into logical groups without affecting the URL Path structure.
+ =>Organizing routes into groups eg: site section,intent, or team.
+ =>Enabling nested layouts in the same route segment level.
+    =>You can have mutliple nested layouts in the same segment, including multiple         root  layouts
+ 
+Convention:
+  A route group can be created by wrapping a folder's name in parenthesis
+  (folderName)
+
+Basic Route Group:
+..................
+npx create-next-app@latest
+√ What is your project named? ... route-groups
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\route-groups.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+src/app/(auth)
+ -login
+   page.js
+ -signup
+   page.js
+
+
+src/app/(auth)/login/page.js
+
+export default function LoginPage() {
+    return <div>
+        <h1>Login Page</h1>
+    </div>
+}
+
+src/app/(auth)/signup/page.js
+
+export default function SignUpPage() {
+    return <div>
+        <h1>Signup Page</h1>
+    </div>
+}
+Testing:
+http://localhost:3000/signup
+http://localhost:3000/login
+
+This will throw error, because auth is hidden
+http://localhost:3000/auth/login 
+....................................................................................
+			Advanced Routing-Route Groups
+			   (Shared Layout)
+....................................................................................
+How to share common layout for all modules/domains/groups?
+
+src/app/layout.js
+
+How to share layout for a domain like auth,marketing,products?
+
+src/app/(auth)/layout.js
+export default function AuthLayout({ children }) {
+    return <div id="authLayout">
+        {children}
+    </div>
+}
+....................................................................................
+			Advanced Routing-Route Groups
+			   (Spefic  Layout for a route)
+....................................................................................
+How to have specific layout for a route?
+
+src/app/(auth)/login/layout.js
+export default function LoginLayout({ children }) {
+    return <div id="loginlayout">
+        {children}
+    </div>
+}
+....................................................................................
+			     Advanced Routing-Route Groups
+			   (Creating Multiple Root Layouts )
+....................................................................................
+if you need mutltiple root layouts, for eg i am building ecommerce app, where auth is separate domain, products separate domain.
+
+YOu can have layout.js inside each domain. we have to remove root layout file.
+Inside domain layout, you have to return html  
+
+Steps:
+1.just remove src/app/layout.js or rename.
+
+2.add src/app(auth)/layout.js
+
+
+export default function AuthRootLayout({ children }) {
+    return (
+        <html lang="en">
+            <body>
+                <div id="authRootLayout">
+                    {children}
+                </div>
+            </body>
+        </html>
+    );
+}
+....................................................................................
+			Advanced Routing-Route Intercepting
+....................................................................................
+
+What is intercepting route?
+
+ Incercepting routes allows you to load a route from another part of your application within the current layout.
+ This routing paradigm can be usefull when you want to display the content of a route without the user switching to a different context.
+
+For example, when clicking on a photo from within a feed, a modal overlaying the feed should show up with the photo. In this case, Next.js intercepts the /feed route and "masks" this URL to show /photo/123 instead.
+
+However, when navigating to the photo by clicking a shareable URL or by refreshing the page, the entire photo page should render instead of the modal. No route interception should occur.
+
+Convention:
+   Intercepting routes can be defined with (..) convention, which is similar to relative path convention ../ but for segments
+
+Syntax:
+ (.) - to match segments on the same level
+ (..) -to match segments on one level above
+ (..)(..)- to match segments on two levels above
+ (...) - to match segments from the root app dir
+
+eg:
+(.)photos
+
+Code:
+We are going to create photo gallary app.
+
+1. When navigating within the application, it is rendered as a modal
+2. When the page is refreshed, it is rendered as a standalone page
+
+1.Model dialog code
+2.Route Interceptor
+
+npx create-next-app@latest
+√ What is your project named? ... route-interceptor
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\route-interceptor.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+src/app/mock-data/photo.js
+const photos = [
+    {
+        id: '1',
+        name: 'Kevin Canlas',
+        href: 'https://twitter.com/kvncnls/status/1471832344986324998',
+        username: '@kvncnls',
+        imageSrc: 'https://pbs.twimg.com/media/FGz_t1wXIAIFyT-?format=jpg',
+    },
+    {
+        id: '2',
+        name: 'Pedro Duarte',
+        href: 'https://twitter.com/peduarte/status/1463897468383412231',
+        username: '@peduarte',
+        imageSrc: 'https://pbs.twimg.com/media/FFDOtLkWYAsWjTM?format=jpg',
+    },
+    {
+        id: '3',
+        name: 'Ahmad Awais',
+        href: 'https://twitter.com/MrAhmadAwais/status/1338151679083032577',
+        username: '@MrAhmadAwais',
+        imageSrc: 'https://pbs.twimg.com/media/EpIR281XIAMUrEM?format=jpg',
+    },
+    {
+        id: '4',
+        name: 'Leandro Soengas',
+        href: 'https://twitter.com/lsoengas/status/1352302741339693061',
+        username: '@lsoengas',
+        imageSrc: 'https://pbs.twimg.com/media/EsRYK8oWMAEkObV?format=jpg',
+    },
+    {
+        id: '5',
+        name: 'Samina',
+        href: 'https://twitter.com/saminacodes/status/1466479548837482497',
+        username: '@saminacodes',
+        imageSrc: 'https://pbs.twimg.com/media/FFn7X76VgAEVTgs?format=jpg',
+    },
+    {
+        id: '6',
+        name: 'lafond.eth',
+        href: 'https://twitter.com/laf0nd/status/1464640065615929346',
+        username: '@laf0nd',
+        imageSrc: 'https://pbs.twimg.com/media/FFNyYEAXsAMdOhV?format=jpg',
+    },
+    {
+        id: '7',
+        name: '山岸和利💛',
+        href: 'https://twitter.com/ykzts/status/1426358452356407297',
+        username: '@ykzts',
+        imageSrc: 'https://pbs.twimg.com/media/E8txb2yVkAQxRVw?format=jpg',
+    },
+    {
+        id: '8',
+        name: 'Altngelo',
+        href: 'https://twitter.com/AfterDarkAngelo/status/1456372859090075648',
+        username: '@AfterDarkAngelo',
+        imageSrc: 'https://pbs.twimg.com/media/FDYTZN1VIAAT-X1?format=jpg',
+    },
+    {
+        id: '9',
+        name: 'Matias Baldanza',
+        href: 'https://twitter.com/matiasbaldanza/status/1404834163203715073',
+        username: '@matiasbaldanza',
+        imageSrc: 'https://pbs.twimg.com/media/E374pyaWEAMCT2R?format=jpg',
+    },
+];
+
+export default photos;
+
+src/app/page.js
+
+import photos from "./mock-data/photo"
+import Link from 'next/link'
+import Image from 'next/image'
+
+export default function Home() {
+
+  return <main className="container mx-auto">
+    <h1 className="text-center text-4xl font-bold m-10">Photo Gallery App</h1>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 auto-rows-max	 gap-6 m-10">
+      {/* show photos */}
+      {photos.map(({ id, imageSrc }) => (
+        <Link key={id} href={`/photos/${id}`}>
+          <Image
+            alt=""
+            src={imageSrc}
+            height={500}
+            width={500}
+            className="w-full object-cover aspect-square"
+          />
+        </Link>
+      ))}
+    </div>
+  </main>
+}
+
+in order to show images which is accessed from outside domain, we need to configure the next.config.js
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    images: {
+        domains: ['pbs.twimg.com'],
+    },
+};
+
+export default nextConfig;
+
+Master detail Page:
+...................
+
+src/app/photos/[id]/page.js
+
+import photos from "@/app/mock-data/photo";
+import Image from 'next/image'
+
+export default function PhotoPage({ params: { id } }) {
+    const photo = photos.find(p => p.id === id)
+    return <div className="container mx-auto my-10">
+        <div className="w-1/2 mx-auto border border-gray-700">
+            {/* <Image
+                alt=""
+                src={photo.imageSrc}
+                height={500}
+                width={500}
+                className="w-full object-cover aspect-square"
+            /> */}
+        </div>
+    </div>
+}
+
+Instead of display image inside same component,we can create separte Framework component
+
+src/app/components/Frame.jsx
+import Image from 'next/image'
+export default function Frame({ photo }) {
+    return (
+        <>
+            <Image
+                alt=""
+                src={photo.imageSrc}
+                height={600}
+                width={600}
+                className="w-full object-cover aspect-square col-span-2"
+            />
+
+            <div className="bg-white p-4 px-6">
+                <h3>{photo.name}</h3>
+                <p>Taken by {photo.username}</p>
+            </div>
+        </>
+    )
+}
+
+Pass image as prop to The Frame Compoent.
+src/app/page.js
+import Frame from "@/app/components/Frame";
+import photos from "@/app/mock-data/photo";
+import Image from 'next/image'
+
+export default function PhotoPage({ params: { id } }) {
+    const photo = photos.find(p => p.id === id)
+    return <div className="container mx-auto my-10">
+        <div className="w-1/2 mx-auto border border-gray-700">
+            {/* <Image
+                alt=""
+                src={photo.imageSrc}
+                height={500}
+                width={500}
+                className="w-full object-cover aspect-square"
+            /> */}
+            <Frame photo={photo} />
+        </div>
+    </div>
+}
+
+Modal Diaglog:
+
+src/app/components/Model.jsx
+'use client'
+import { useRef, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
+
+export default function Modal({ children }) {
+    const overlay = useRef(null)
+    const wrapper = useRef(null)
+    const router = useRouter()
+    //hooks for controlling client navigation
+    const onDismiss = useCallback(() => {
+        router.back()
+    }, [router])
+
+    const onClick = useCallback(
+        (e) => {
+            if (e.target === overlay.current || e.target === wrapper.current) {
+                if (onDismiss) onDismiss()
+            }
+        },
+        [onDismiss, overlay, wrapper]
+    )
+    const onKeyDown = useCallback(
+        (e) => {
+            if (e.key === 'Escape') onDismiss()
+        },
+        [onDismiss]
+    )
+
+    //useEffect  === ComponentDidUpdate
+    useEffect(() => {
+        document.addEventListener('keydown', onKeyDown)
+        return () => document.removeEventListener('keydown', onKeyDown)
+    }, [onKeyDown])
+    return (
+        <div
+            ref={overlay}
+            className="fixed z-10 left-0 right-0 top-0 bottom-0 mx-auto bg-black/60"
+            onClick={onClick}
+        >
+            {/* This div will show the photo */}
+            <div
+                ref={wrapper}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full sm:w-10/12 md:w-8/12 lg:w-1/2 p-6"
+            >
+                {children}
+            </div>
+        </div>
+    )
+
+}
+
+Create Parallel Route to display Modal:
+.........................................
+
+create default.js 
+
+src/app/@modal/default.js
+
+export default function Default() {
+    return null
+}
+
+Note: In the Intercepting routing, parrel route must have default.js which should return null.
+
+
+src/app/@modal/(.)photos/[id]/page.js
+import photos from "@/app/mock-data/photo"
+import Frame from "@/app/components/Frame"
+
+export default function PhotoModal({ params: { id: photoId } }) {
+    const photo = photos.find((p) => p.id === photoId)
+
+    return (
+        <Modal>
+            <Frame photo={photo} />
+        </Modal>
+    )
+}
+....................................................................................
+			 Styling - CSS,IMAGES,Fonts
+.....................................................................................
+
+Types of styling:
+
+1.Global Css
+2.CSS Modules
+3.CSS Frameworks
+  ->Tailwind
+  ->Bootstrap
+  -SASS
+4.CSS in js
+
+Global css:
+
+Next provides file called global.css where you can add global css and also sass directives.
+src/app/global.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+How to use css inside page or layout?
+
+import statement and className attribute
 
 
 
+import { Inter } from "next/font/google";
+import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+
+Image:
+ Image is component which must be used instead html img element.
+
+	<Image
+                alt=""
+                src={photo.imageSrc}
+                height={500}
+                width={500}
+                className="w-full object-cover aspect-square"
+            /> 
+
+
+Fonts:
+ Next provides fonts module which integrates google fonts which would be part of 
+the package 'next/font/google'
+ 
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
+
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+
+CSS Modules:
+
+src/app/dashboard/dashboard.module.css
+.dashboard {
+    padding: 24px;
+    border: 10px;
+    text-align: center;
+    border-color: blue;
+    background-color: aquamarine;
+}
+
+src/app/dashboard/layout.js
+import styles from './dashboard.module.css'
+
+export default function DashboardLayout(props) {
+    return <div className={styles.dashboard}>
+        {props.children}
+    </div>
+}
+....................................................................................
+			 Data Fetching
+....................................................................................
 
 
 
