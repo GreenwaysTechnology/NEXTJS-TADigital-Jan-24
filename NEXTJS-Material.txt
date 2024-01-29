@@ -1909,7 +1909,7 @@ export default function AuthLayout({ children }) {
     </div>
 }
 ....................................................................................
-			Advanced Routing-Route Groups
+			 Advanced Routing-Route Groups
 			   (Spefic  Layout for a route)
 ....................................................................................
 How to have specific layout for a route?
@@ -2388,9 +2388,564 @@ export default function DashboardLayout(props) {
     </div>
 }
 ....................................................................................
-			 Data Fetching
+			      Data Fetching
 ....................................................................................
 
+Data fetching is nothing but talking to apis particulary REST API OR GraphQL 
+Next app can fetch data either from external end points or internal end points, next provides a feature to build rest apis.
 
+Page can talk directly to External api 
+Next Page---------------------->External API 
+
+Page can talk to NEXT API which intern calls External API 
+Next Page-------------|NEXT API-------->External API 
+
+Page can talk to NEXT API Which talks to databases 
+Next Page-------------|NEXT API-------->Databases 
+
+Types of Data fetching:
+.......................
+
+1.Server side data fetching
+2.Client side data fetching
+
+Server side data fetching:
+
+=>Whenever possible, we recommend fetching data on the server. This allows you to:
+
+=>Have direct access to backend data resources (e.g. databases).
+
+=>Keep your application more secure by preventing sensitive information, such as access tokens and API keys, from being exposed to the client.
+
+=>Fetch data and render in the same environment. This reduces both the back-and-forth communication between client and server, as well as the work on the main thread on the client.
+
+=>Perform multiple data fetches with single round-trip instead of multiple individual requests on the client.
+
+=>Reduce client-server waterfalls.
+
+=>Depending on your region, data fetching can also happen closer to your data source, reducing latency and improving performance.
+
+Fetching Data Where It's Needed:
+
+If you need to use the same data (e.g. current user) in multiple components in a tree, you do not have to fetch data globally, nor forward props between components. Instead, you can use fetch or React cache in the component that needs the data without worrying about the performance implications of making multiple requests for the same data.
+
+ Parent - Layout  - apicallurl eg fetch('/api/customers')
+   |
+   child  - Layout -apicallsameurl -fetch('/api/customers')
+     |
+     child -Layout -apicallsameurl -fetch('/api/customers')
+       |
+      child -Layout -apicallsameurl -fetch('/api/customers')
+        |
+        child- Page -apicallsameurl -fetch('/api/customers')
+
+.....................................................................................
+		  Server side data fetching using "fetch" api
+.....................................................................................
+
+Fetching data on the server with fetch:
+.......................................
+
+Next.js extends the native "fetch" Web API to allow you to configure the caching and revalidating behavior for each fetch request on the server.
+React extends fetch to automatically memoize fetch requests while rendering a React component tree.
+
+
+There are four places You can use fetch:
+1.Server components
+2.Client Components
+3.Route Handlers,REST API
+4.Server Actions
+
+You can use fetch with async/await in "Server Components", in "Route Handlers", and in "Server Actions".
+
+Eg: 
+Fetch api In server components
+
+
+npx create-next-app@latest
+√ What is your project named? ... data-fetching
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\data-fetching.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- autoprefixer
+- postcss
+- tailwindcss
+
+fetch with external api:
+........................
+
+src/app/todos/page.js
+
+
+//write a function to fetch data 
+export async function fetchTodos() {
+    const url = 'https://jsonplaceholder.typicode.com/todos'
+    const response = await fetch(url);
+    return response.json()
+}
+
+export default async function TodosPage() {
+    const todos = await fetchTodos();
+
+    return <>
+        <h1>Todos Page</h1>
+        <ul>
+            {
+                todos.map(todo => {
+                    return <li>{todo.title}</li>
+                })
+            }
+        </ul>
+    </>
+}
+
+.....................................................................................
+		  Server side data fetching using  "third party" api-axios
+.....................................................................................
+
+You can use any third party ajax api to call apis from next application but which is not recommended, because other apis will not have features such as caching,revalidation,request memoziation, we have to write extra code.
+.....................................................................................
+	     Data fetching in Client components-Using fetch api
+....................................................................................
+
+'use client'
+
+import { useEffect, useState } from "react";
+
+const FetchPost = () => {
+    const [posts, setPosts] = useState([])
+    useEffect(() => {
+        async function fetchPostsDetails() {
+            const url = 'https://jsonplaceholder.typicode.com/posts'
+            const response = await fetch(url);
+            const posts = await response.json()
+            console.log(posts)
+            setPosts((myposts) => {
+                return posts.concat(myposts)
+            })
+        }
+        fetchPostsDetails()
+        return () => {
+            return null;
+
+        }
+    }, [])
+    return <>
+        <h1>Posts</h1>
+        <ul>
+            {
+                posts.map(post => {
+                    return <li>{post.title}</li>
+                })
+            }
+        </ul>
+    </>
+}
+export default FetchPost;
+
+
+Using fetch api in client components is not recommened, the reason which has no any caching fetching in client side is not enabled,
+.....................................................................................
+	     Data fetching in Client components-Using SWR api
+....................................................................................
+What is SWR?
+  The name “SWR” is derived from stale-while-revalidate, a HTTP cache invalidation strategy popularized by HTTP RFC 5861(opens in a new tab).
+ SWR is a strategy to first return the data from cache (stale), then send the fetch request (revalidate), and finally come with the up-to-date data.
+
+ SWR is wrapper for fetch api only.
+
+Why SWR
+1.Client side caching by default
+2.Cache revalidation by default
+3.You dont need to write hooks like useEffect,useState,
+4.You get data,error,loading flags
+
+npm install swr
+
+src/app/posts/compoents/PostClientUsingSWR.jsx
+
+'use client'
+import useSWR from "swr"
+
+function fetcher(...args) {
+    return fetch(...args).then(res => res.json())
+}
+
+function FetchPostsUsingSWR() {
+    const url = 'https://jsonplaceholder.typicode.com/posts'
+    const { data, error, isLoading } = useSWR(url, fetcher)
+    if (error) {
+        return <div>
+            <h1>Failed to return</h1>
+        </div>
+    }
+    if (isLoading) {
+        return <h1>Loading...</h1>
+    }
+    return <ul>
+        {
+            data.map(post => {
+                return <h2>{post.title}</h2>
+            })
+        }
+    </ul>
+}
+
+export default FetchPostsUsingSWR;
+
+src/app/posts/page.js
+import FetchPost from "./components/PostClient"
+import FetchPostsUsingSWR from "./components/PostClientUsingSWR"
+
+export default function PostPage() {
+    return <div>
+        <h1>Post Page</h1>
+        {/* Using fetch api */}
+        {/* <FetchPost /> */}
+        <FetchPostsUsingSWR />
+    </div>
+}
+.....................................................................................
+			Data Fetching using Route Handler
+		      (REST API Development and Integration)
+.....................................................................................
+
+Next.js provides a layouter called "API" layer in order to build REST API.
+
+API layer can be used to write REST API Which may talk to databases or external rest apis or GraphQL api or Microservices...
+
+Route Handler:
+  Route handlers are used to create REST API in next.js
+
+Convention:
+ route.js
+
+src/app/todos/
+        page.js
+        layout.js
+        route.js --- this folder is not recommended
+
+src/app/api/
+        todos
+	 -route.js
+        customers
+         -route.js
+        products
+         -route.js
+	 |
+         [id]
+          |
+          route.js
+url pattern:
+  /api/todos
+  /api/products/1
+  
+npx create-next-app@latest
+√ What is your project named? ... restapi-routers
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\restapi-routers.
+
+Using npm.
+
+Initializing project with template: app
+
+
+Installing dependencies:
+- react
+- react-dom
+
+.....................................................................................
+
+Inside route handlers we write rest apis:
+
+syntax:
+
+export async function HTTPVERB(request){
+
+}
+
+=>Always route function must have "export" only.
+=>Function must have async keyword
+=>Function args must have request object.
+
+Supported HTTP VERBS:
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
+  HEAD
+  OPTIONS
+
+APIS:
+ NextRequest object used to handle client request
+ NextResponse Object used to send respons to the client.
+
+=>Function name must be HTTP Verb name like "GET"
+
+// routers 
+
+src/app/api/greeter/route.js
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+    //return response
+    return NextResponse.json({ message: 'hello' })
+}
+....................................................................................
+			How to read Request Parameter
+...................................................................................
+
+Dynamic parameters:
+
+URL:
+http://localhost:3000/api/greeter/welcome
+
+src/app/api/greeter/[message]/route.js
+// routers 
+
+import { NextResponse } from "next/server";
+
+export async function GET(request, { params }) {
+    console.log(params)
+    //return response
+    return NextResponse.json({ message: params.message })
+}
+.....................................................................................
+		 How to read payload -body -Post Request
+.....................................................................................
+// routers 
+
+src/app/api/greeter/route.js
+
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+    //return response
+    return NextResponse.json({ message: 'hello' })
+}
+//post 
+export async function POST(request, { params }) {
+    //read body 
+    const payload = await request.json()
+    console.log(payload)
+    return NextResponse.json({ message: 'saved' })
+}
+.....................................................................................
+Recommendations:
+................
+findAll
+Save Operations
+ 
+write inside
+  src/app/api/customers/route.js
+
+findById
+deleteById
+updateById
+ Any api which has parameters
+ write inside
+
+ src/app/api/customers/[id]/route.js
+.....................................................................................	
+
+CURD operations:
+
+1.You can talk to external API
+2.You can talk to databases
+
+External API Integration:
+.........................
+
+Next UserInterface(pages,layouts)--------->API Layer----------->External API
+
+
+
+src/app/api/alubums/route.js
+import { NextResponse } from "next/server"
+
+const url = 'https://jsonplaceholder.typicode.com/albums'
+
+//GET ALL albums
+export async function GET(request) {
+    const response = await fetch(url)
+    const albums = await response.json()
+    return NextResponse.json(albums)
+}
+
+//POST 
+export async function POST(request) {
+
+    const album = await request.json()
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(album)
+    })
+    const newAlbum = await res.json()
+    return NextResponse.json(newAlbum)
+}
+
+//GET BY ID,UPDATE BY ID,DELETE BY ID:
+......................................
+src/app/api/albums/[id]/route.js
+
+import { NextResponse } from "next/server";
+
+const url = `https://jsonplaceholder.typicode.com/albums`
+
+
+//GET ALBUM BY id
+export async function GET(request, { params }) {
+    const id = params.id
+    const response = await fetch(`${url}/${id}`)
+    const album = await response.json()
+    return NextResponse.json(album)
+}
+
+//UPDATE Album by id 
+export async function PUT(request, { params }) {
+    //const album = await request.json()
+    const { title } = await request.json()
+    const id = params.id
+    const res = await fetch(`${url}/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title })
+    })
+    const updatedAlbum = await res.json()
+    return NextResponse.json(updatedAlbum)
+}
+
+//DELETE Albumb by id :
+export async function DELETE(request, { params }) {
+    const id = params.id
+    const res = await fetch(`${url}/${id}`, {
+        method: 'DELETE'
+    })
+    const deletedAlbum = await res.json()
+    return NextResponse.json(deletedAlbum)
+}
+.....................................................................................
+		    	   Externalization
+.....................................................................................
+
+In the above example we have hard coded urls. What if i dont want to hard code
+
+const url = `https://jsonplaceholder.typicode.com/albums`
+
+How to externalize the data like urls?
+
+We have file called ".env" file.
+
+Enviroment Variables:
+.....................
+
+Next js comes with built in support for env variables which allows you to make  your app more configurable, more flexiable.
+
+File Syntax
+.env 
+.env.enviroment
+ envirronment would be "dev or prod or test"
+
+.env.development
+.env.production
+.env.test
+.env.local
+
+projectName/.env 
+eg:
+restapi-routers/.env
+
+ALBUMS_URL="https://jsonplaceholder.typicode.com"
+
+
+src/app/api/albums/route.js
+import { NextResponse } from "next/server"
+
+//const url = 'https://jsonplaceholder.typicode.com/albums'
+const url = `${process.env.ALBUMS_URL}/albums`
+
+//GET ALL albums
+export async function GET(request) {
+    const response = await fetch(url)
+    const albums = await response.json()
+    return NextResponse.json(albums)
+}
+
+//POST 
+export async function POST(request) {
+
+    const album = await request.json()
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(album)
+    })
+    const newAlbum = await res.json()
+    return NextResponse.json(newAlbum)
+}
+.....................................................................................
+                     Data Fetching using Routers
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+src/app/albums/page.js
+
+export async function fetchAlbums() {
+    //const url = 'https://jsonplaceholder.typicode.com/todos'
+    const url = `${process.env.HOST}/albums`
+    const response = await fetch(url);
+    return response.json()
+}
+export default async function AlbumsPage() {
+    const albums = await fetchAlbums();
+
+    return <>
+        <h1>Albums Page</h1>
+        <ul>
+            {
+                albums.map(album => {
+                    return <li>{album.title}</li>
+                })
+            }
+        </ul>
+    </>
+}
+
+Task:
+ You have to build master detail page
+...................................................................................
+			  Database Integration
+...................................................................................
 
 
