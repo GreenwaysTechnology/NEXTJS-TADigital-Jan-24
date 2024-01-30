@@ -2948,4 +2948,634 @@ Task:
 			  Database Integration
 ...................................................................................
 
+Next js can integrate with any database including sql(mysql,oracle,postgresql) and no sql (mongo,neodb,redis)
+
+In order to talk to databases application uses database drivers and apis.
+
+Mostly we use using database frameworks called "ORM"-Object Relational Mapping framework.
+
+For Node.js, we have many frameworks
+
+1.Prisma
+2.Sequelize
+3.Type ORM
+etc....
+
+We are going to use "Prisma".
+
+Steps:
+1.create  a project
+>npx create-next-app@latest
+√ What is your project named? ... db-app
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\db-app.
+
+Using npm.
+
+Initializing project with template: app
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+2.install prisma framework.
+
+Before installing prisma framework, we have to decide what database we are going to use.
+
+If you are going to use Postgres sql database,then Postgressql database must have been installed.
+
+How to install database? What ever database?
+
+1.Download database like postgres 
+2.install locally.
+
+In modern days, we never download database and install, then how to download and install.
+via container technologies like "Docker"
+
+Now, i am going to use "inmemory" database, we dont even need docker.
+
+Note: In memory databases not for production, or not for real time applications.
+only for learning purpose.
+
+InMemory databses:
+1.sqlite
+2.H2
+etc....
+
+we are going to use "sqlite" database.
+
+
+install prisma with sqlite integration.
+
+
+E:\session\TADigital\db-app>npx prisma init --datasource-provider sqlite
+Need to install the following packages:
+prisma@5.8.1
+Ok to proceed? (y) y
+
+✔ Your Prisma schema was created at prisma/schema.prisma
+  You can now open it in your favorite editor.
+
+warn You already have a .gitignore file. Don't forget to add `.env` in it to not commit any private information.
+
+Next steps:
+1. Set the DATABASE_URL in the .env file to point to your existing database. If your database has no tables yet, read https://pris.ly/d/getting-started
+2. Run npx prisma db pull to turn your database schema into a Prisma schema.
+3. Run npx prisma generate to generate the Prisma Client. You can then start querying your database.
+
+More information in our documentation:
+https://pris.ly/d/getting-started
+.....................................................................................
+			   ORM Fundamentals
+.....................................................................................
+
+Object  Relational    Mapping
+ |        |            |
+Enity   RDBMS         Binding
+
+In Database Program, we use sql quries for creating,inserting,updating,deleting
+
+In ORM world, SQL Queries are abstracted by apis like save,findAll,findById,remove,update.
+
+Entity represents "table" in the database.
+ 
+schema:
+   The plan or structure.
+
+Define Model(Enity)
+
+model User{
+
+}
+model Product {
+
+}
+....
+
+Fields:
+  Fields are mapped in the table as columns
+
+model Comment {
+  id Int @id @default(autoincrement())
+  title String
+  content String
+}
+
+Where to define this model?
+
+prisma/schema.prisma
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+//Define Model- Map tables against database
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  role      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+....................................................................................
+			Map Model in the database
+....................................................................................
+
+E:\session\TADigital\db-app>npx prisma migrate dev --name init
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+SQLite database dev.db created at file:./dev.db
+
+Applying migration `20240130045105_init`
+
+The following migration(s) have been created and applied from new schema changes:
+
+migrations/
+  └─ 20240130045105_init/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+
+added 6 packages, and audited 27 packages in 8s
+
+3 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+added 1 package, and audited 28 packages in 4s
+
+3 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+✔ Generated Prisma Client (v5.8.1) to .\node_modules\@prisma\client in 62ms
+
+
+After running, you will able to see the table structure.
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+...................................................................................
+			Seeding database
+...................................................................................
+
+This step is only for testing, which is optional in production apps.
+
+While app starts if you want to insert some data, for testing, you can seed database.
+
+prisma/seed.mjs
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient()
+
+async function main() {
+    const user = await prisma.user.create({
+        data: {
+            name: 'admin',
+            email: 'admin@gmail.com',
+            role: 'admin'
+        },
+    })
+    console.log('created', user)
+}
+main().then(() => prisma.$disconnect()).catch(async (e) => {
+    console.error(e)
+    await prisma.$disconnect()
+    process.exit()
+})
+
+packag.json.
+{
+  "name": "db-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.1",
+    "next": "14.1.0",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "prisma": "^5.8.1"
+  }
+}
+
+Seeding:
+.......
+
+E:\session\TADigital\db-app>npx prisma db  seed
+Environment variables loaded from .env
+Running seed command `node prisma/seed.mjs` ...
+created {
+  id: 1,
+  name: 'admin',
+  email: 'admin@gmail.com',
+  role: 'admin',
+  createdAt: 2024-01-30T05:14:59.223Z,
+  updatedAt: 2024-01-30T05:14:59.223Z
+}
+
+The seed command has been executed.
+...................................................................................
+			 Client api
+
+Client api will help to talk to database from rest api.
+
+src/lib/prisma.js
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = global;
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+    log: ["query"]
+})
+
+....................................................................................
+			 Rest api with Prisma
+..................................................................................
+
+src/app/api/users/route.js
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+
+//read all users
+export async function GET() {
+    const users = await prisma.user.findMany({})
+    if (!users) {
+        return NextResponse.json({ message: 'No Users Found', code: 404 })
+    } else {
+        return NextResponse.json(users)
+    }
+}
+//create new User 
+export async function POST(request) {
+    try {
+        const json = await request.json()
+        const user = await prisma.user.create({
+            data: json
+        })
+        return new NextResponse(JSON.stringify(user), {
+            status: 201, headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+    catch (err) {
+        if (error.code === "P2002") {
+            return new NextResponse("User with email already Exist", { statuscode: 409 })
+        }
+        return new NextResponse(err.message, { statuscode: 500 })
+    }
+}
+..............
+GETBYID,update,delete
+
+src/app/api/user/[id]/route.js
+
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+
+//Get User by id
+export async function GET(request, { params }) {
+    const id = Number(params.id)
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id
+        }
+    })
+    if (!user) {
+        return NextResponse.json({ message: `No User Found with ID ${id}`, code: 404 })
+    } else {
+        return NextResponse.json(user)
+    }
+}
+
+export async function PATCH(request, { params }) {
+    try {
+        const id = Number(params.id)
+        const user = await request.json()
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: user
+        })
+        if (!updatedUser) {
+            return NextResponse.json({ message: `No User Found with ID ${id}`, code: 404 })
+        }
+        return NextResponse.json(updatedUser)
+
+    } catch (err) {
+        if (error.code === "P2002") {
+            return new NextResponse("User with ID already Exist", { statuscode: 409 })
+        }
+        return new NextResponse(err.message, { statuscode: 500 })
+    }
+}
+
+//delete 
+export async function DELETE(request, { params }) {
+    try {
+        const id = Number(params.id)
+        if (!id) {
+            return NextResponse.json({ message: `No User Found with ID ${id}`, code: 404 })
+        } else {
+            await prisma.user.delete({
+                where: {
+                    id
+                }
+
+            })
+            return new NextResponse(null, { status: 204 })
+        }
+
+
+    }
+    catch (err) {
+        return new NextResponse(err.message, { statuscode: 500 })
+    }
+}
+.....................................................................................
+				SSG-Static Site Generation
+.....................................................................................
+
+Rendering pages happen during build time.
+
+The generateStaticParams function can be used in combination with dynamic route segments to define the list of route segment parameters that will be statically generated at build time instead of on-demand at request time.
+
+npx create-next-app@latest
+√ What is your project named? ... ssg-app
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\ssg-app.
+
+Using npm.
+
+Initializing project with template: app
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+How to build ssg apps?
+
+=>You have to over ride the function called "generateStaticParams" 
+=>generateStaticParams function gets called only during build time...
+
+Step 1:
+ Create Master Page.
+
+src/app/todos/page.js
+//Master page
+
+import Link from "next/link";
+
+export async function fetchTodos() {
+    const url = 'https://jsonplaceholder.typicode.com/todos'
+    const response = await fetch(url)
+    return response.json()
+}
+
+export default async function TodosPage() {
+    const todos = await fetchTodos();
+    return <div>
+        <ul>
+            {
+                todos.map(todo => {
+                    return <>
+                        <li>
+                            <Link href={`/todos/${todo.id}`}>{todo.title}</Link>
+                        </li>
+                    </>
+                })
+            }
+        </ul>
+    </div>
+}
+
+Create Details Page.
+
+Override generateStaticParams methods
+
+export async function fetchTodos() {
+    const url = 'https://jsonplaceholder.typicode.com/todos'
+    const response = await fetch(url)
+    return response.json()
+}
+
+export default function TodosDetailsPage(props) {
+    return <div>
+        <h1> {props.params.id} - Todos Details Page</h1>
+    </div>
+}
+
+//generateStaticParams method 
+
+export async function generateStaticParams() {
+    //this method must return array
+    console.log('building')
+    const todos = await fetchTodos()
+    //generate html pages for all todos:if you have 100 records, 100 html file would be generated
+    return todos.map(todo => {
+        //based on id only the pages are generated,id value must be string
+        let id = todo.id.toString()
+        return {
+            id: id
+        }
+    })
+}
+
+In order to test this code , we need to build and we need to run application using prod mode.
+
+npm run build
+E:\session\TADigital\ssg-app>npm run build
+
+> ssg-app@0.1.0 build
+> next build
+
+   ▲ Next.js 14.1.0
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+ ✓ Linting and checking validity of types
+   Collecting page data  ...building
+ ✓ Collecting page data
+ ✓ Generating static pages (206/206)
+ ✓ Collecting build traces
+ ✓ Finalizing page optimization
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    143 B          84.3 kB
+├ ○ /_not-found                          885 B            85 kB
+├ ○ /todos                               6.94 kB        91.1 kB
+└ ● /todos/[id]                          143 B          84.3 kB
+    ├ /todos/1
+    ├ /todos/2
+    ├ /todos/3
+    └ [+197 more paths]
++ First Load JS shared by all            84.1 kB
+  ├ chunks/69-1b6d135f94ac0e36.js        28.9 kB
+  ├ chunks/fd9d1056-cc48c28d170fddc2.js  53.4 kB
+  └ other shared chunks (total)          1.83 kB
+
+
+○  (Static)  prerendered as static content
+●  (SSG)     prerendered as static HTML (uses getStaticProps)
+
+
+You can lookat project workspace, there ".next" folder would be have created.
+This folder having all production files.
+
+SSG files are found under
+
+.next/server/app/todos
+   1.html
+   2.html
+  etc...
+
+How to test?
+
+npm start
+  Which starts production server and deploys app.
+.....................................................................................
+			 Loading and Streaming
+....................................................................................
+
+Loading UI:
+ The special file called loading.js helps to create meaningfull loading ui with "React Suspense".
+With this convention, you can show an instant loading state from the server while the content of route segment loads, the new content is automaticlly swapped in once rendering is completed.
+
+steps:
+
+1.src/app/dashboard/layout.js
+export default function DashboardLayout(props) {
+    return <div>
+        {props.children}
+    </div>
+}
+2.src/app/dashboard/loading.js
+export default function Loading() {
+    //you can add UI inside Loading,including a Skeleton
+    return <h1>Loading...</h1>
+}
+
+3.src/app/dashboard/compoents/greeter.jsx
+export default function Greeter(props) {
+    return <>
+        <h1>Hello</h1>
+    </>
+}
+4.src/app/dashboard/page.js
+import React from 'react'
+
+//WelcomeL
+const Welcome = React.lazy(() => {
+    //return promise
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, 8000, import('./components/greeter'))
+    })
+})
+
+
+export default function DashboardPage() {
+    return <>
+        <Welcome />
+    </>
+}
+Compoent structure:
+<Layout>
+   <Suspense fallback={<Loading/>}>
+     <Page/>
+  </Suspense>
+...................................................................................
+	Putting loading status with in Page: Overriding existing loading.js
+...................................................................................
+
+Can we add Loader via Suspense Manually.
+
+Yes, we can add, always local Suspense takes priority.
+
+import React, { Suspense } from 'react'
+
+//WelcomeL
+const Welcome = React.lazy(() => {
+    //return promise
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, 8000, import('./components/greeter'))
+    })
+})
+
+
+export default function DashboardPage() {
+    return <>
+        <h1>Dashboard page </h1>
+        {/* <Welcome/> */}
+        <Suspense fallback={<h1>Loading Locally.....</h1>}>
+            <Welcome />
+        </Suspense>
+        <h1>Dashboard page </h1>
+        <h1>Dashboard page </h1>
+        <h1>Dashboard page </h1>
+        <h1>Dashboard page </h1>
+        <h1>Dashboard page </h1>
+
+    </>
+}
+....................................................................................
+			  Streaming
+....................................................................................
+
+
+
+
+
+
+
 
