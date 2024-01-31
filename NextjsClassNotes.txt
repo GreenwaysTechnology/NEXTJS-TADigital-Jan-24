@@ -179,3 +179,142 @@ page.js
     <Page/>
 </Layout>
 
+
+
+runtime -  js engine - v8, 
+	   nodejs
+
+js code:
+
+  object
+     ->data
+     ->methods
+
+
+objects are hosted inside runtime in a heap memory
+
+obj.mymethod()=>stack=>frame is created
+
+when you call method more times in the same sequence....
+
+
+object.mymethod() --stack-frame is created ->10
+object.mymethod() --stack-frame is created
+object.mymethod()--stack-frame is created
+object.mymethod()--stack-frame is created
+
+What if a method returns same result again and again.
+
+object.mymethod() --stack-frame is created ->10 -12
+object.mymethod() --stack-frame is created ->10
+object.mymethod()--stack-frame is created-->10
+object.mymethod()--stack-frame is created-->10
+
+what is caching?
+  Caching is tech through which you can store fun returned value in memory,
+ when next method invocation , we dont need to create frame rather return that value from cache.
+
+React hooks:
+
+1.useState
+2.useEffect
+
+.............
+
+revalidation:
+ Clear the cache- delete entries from the cache.
+
+caching:
+server
+
+ -function calls -for creating components 
+
+const Welcome=()=>useMemo(<h1>Hello</h1>)
+
+<Welcome/>
+<Welcome/>
+<Welcome/>
+<Welcome/>
+
+data cache
+  fetch('/api/todos') -> hits api server-get data- stores data in cache
+  fetch('/api/todos') - take data from cache
+  fetch('/api/todos') - take data from cache
+
+Full Route cache
+   Page rendering - create html- cache it
+  if you ask the same page again-take from cache
+
+client side: 
+  router cache..
+..............
+
+caching can happen during request time or build time.
+
+SSG:
+ During build--pages are cached
+
+after build, if user gives request---->gets that page from cache....
+
+after build, if your gives request, what if there is data change,---we cant get from cache-- we need to rerender(recreate page) ->ISR
+
+During request time- pages cached
+
+Caching terminallogy:
+
+MISS :
+    If requested item is not in cache
+
+SET:
+   STORE THE REQUESTED ITEM INTO CACHE
+
+HIT:
+   if requested item in the cache.
+
+
+request memoziation and fetch request:
+........................................
+
+/a
+tree
+  |
+ layout
+    fetch -----miss-hit-set
+
+   nested layout
+
+  page
+     fetch - hit
+   
+   component-1
+       fetch - hit
+
+   |
+   tree is rendered-
+     memory is reset
+
+/a
+
+Request Memoization is applied for "REST APIS"-ROUTE HANDLER
+  only for component tree.
+
+
+Data cache:
+ It is memory where you can cache data of next application
+
+ fetch('/api/todos')=> [{}] ->store in cache
+
+ in order to set data into data cache  using fetch, we dont need to write any code.
+ fetch has been extended to add those behaviour automatically. 
+
+
+Data cache reavalidation:
+ clearning
+
+
+
+
+
+
+
+
