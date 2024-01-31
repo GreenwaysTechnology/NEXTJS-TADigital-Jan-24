@@ -3571,6 +3571,389 @@ export default function DashboardPage() {
 ....................................................................................
 			  Streaming
 ....................................................................................
+		Streaming
+...................................................................................
+What is Streaming?
+ Before understanding what is streaming, we need to understand how SSR works and its limiatation
+ Streaming is going to enchance the SSR limiations.
+
+Steps Involved In SSR:
+.....................
+
+1.First , all data for a given page is fetched on the server.
+
+2.The server then renders the HTML page 
+
+3.Once the HTML is ready, the server will send HTML,CSS,javascript for the page are sent to the client.
+
+4.NonInteractive user interface is shown using the generated HTML and CSS In browser
+
+5.Finally React, Hydrates,the user interface to make it interactive
+
+
+How to measure web site performance?
+
+In order to measure web performance we have some metrics
+
+1.TTFB
+2.FCP
+3.TTI
+
+TTFB: Time to First Byte:
+........................
+ Time to First Byte (TTFB) refers to the time between the browser requesting a page and when it receives the first byte of information from the server. This time includes DNS lookup and establishing the connection using a TCP handshake and SSL handshake if the request is made over HTTPS
+
+TTFB is a metric that measures the time between the request for a resource and when the first byte of a response begins to arrive.
+
+
+FCP :First Contentfull Paint
+............................
+The First Contentful Paint (FCP) metric measures the time from when the page starts loading to when any part of the page's content is rendered on the screen
+
+
+TTI:Time to Interactive 
+
+  Time to Interactive (TTI) is a non-standardized web performance 'progress' metric defined as the point in time when the last Long Task finished and was followed by 5 seconds of network and main thread inactivity.
+
+These steps are sequentinal and blocking, meaning that the server only render HTML for a page once all the data has been fetched. 
+And on the client side React can only hydrate the UI once the code for all components in the page has been downloaded..
+
+this is traditional process, which degrades the app loading performance
+.....................................................................................
+		  How to improve loading performance
+....................................................................................
+
+SSR with React and Next.js helps improve the perceived loading performance by showing a non interactive page to the user as soon as possible.
+
+Only HTML can be sent once the data fetching is over.
+
+
+Streaming allows you to break down the page's HTML into smaller chunks and progressively send those chunks from the server to the client.
+
+This enables part of the page to be displayed sooner, without waiting for all the data to load before any UI can be rendered.
+
+How to break down into chunks?
+
+  React mental model is component driven, each component we can treat as chunk.
+
+eg:
+  if a component have priority or that dont rely on data can be sent first (eg layouts),so the react can hydration eariler....
+ if components has less priority, or depends data to be sent later...
+
+How to implement streaming?
+ You have to split code into segments
+
+1.static code which does not depend on data
+2.dynamic code which depends on data.
+
+if you wrap any component with "Suspense Boundary" which is async, can be rendered later.
+
+if the component relays on data fetching, delays with timers, delays with network connections......
+
+Streaming Component:
+....................
+
+export default function Product(props) { 
+   <section>
+    <nav><a href="product.html"><a></nav>
+    <Suspense fallback={<h1>loading....}>
+	 <ProductDetails/>
+     <Suspense>
+   <section>
+	
+}
+
+Through suspense we can enable streaming....
+
+1.Streaming server rendering: Progressively rendering html from the server to the client
+
+2.Selective Hydration 
+    React prioritizes what components to make interactive first based on user interaction.
+
+.....................................................................................
+			 Error Handling
+....................................................................................
+
+There are two types of errors
+
+1.Page error
+  if url is not found, then it throws NotFound.
+  not-found.js
+2.Application error
+  error.js
+
+Introducing Error Boundaries:
+	A JavaScript error in a part of the UI shouldn’t break the whole app. To solve this problem for React users, React 16 introduces a new concept of an “error boundary”.
+
+	Error boundaries are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed
+
+<ErrorBoundary>
+   <MyWidget />
+</ErrorBoundary>
+
+
+The error.js file convention allows you to handle runtime errors in nested routes.
+
+By default Nextjs , wraps your components /pages/layouts within ErrorBoundary only...
+
+if you want to customize the error messages, we can add error.js within the route of app or within nested route.
+
+Create ERROR ui tailored to secific segements using the file system hierarchy to adjust granualrity.
+
+...................................................................................
+...................................................................................
+				Route Error Handler
+....................................................................................
+
+app
+ |
+ page.js
+ layout.js
+ dashboard
+    |
+    page.js
+    layout.js
+    error.js
+
+
+error.js
+ It automatically creates ReactErrorBoundary that wraps a nested child segment or page compoent
+  <Layout>
+  
+    <ErrorBoundary fallback={<Error/>}
+	<Layout>
+		<Page/>
+        </Layout>
+    </ErrorBoundary>
+  </Layout>
+
+ error components are "client components"
+
+
+error.js
+
+'use client'; //Error Component must be client component
+
+export default function Error(props) {
+    return <div>
+        <h2>Something went Wrong!</h2>
+    </div>
+}
+
+How to access the error information within error Component?
+ The error component has prop
+
+
+'use client'; //Error Component must be client component
+
+export default function Error(props) {
+    console.log(props)
+    return <div>
+        <h2>Error Page</h2>
+        <h3>{props.error.message}</h3>
+    </div>
+}
+
+Recovery from the errors:
+
+How to recover the errors due to some to network failure...
+
+
+'use client'; //Error Component must be client component
+
+export default function Error(props) {
+    console.log(props)
+    return <div>
+        <h2>Error Page</h2>
+        <h3>{props.error.message}</h3>
+        <button onClick={() => {
+            props.reset()
+        }}>Reset</button>
+    </div>
+}
+.....................................................................................
+			How to add Error handler at root
+.....................................................................................
+
+		 Errors bubble up
+..................................................................................
+Errors bubble up to the nearest parent error boundary. This means an error.js file will handle errors for all its nested child segments. More or less granular error UI can be achieved by placing error.js files at different levels in the nested folders of a route.
+
+src/app/error.js
+'use client';
+import { useEffect } from "react";
+
+//Error Component must be client component
+
+export default function Error(props) {
+    //error reporting
+    useEffect(() => {
+        //log error into error reporting service
+        console.error(error)
+    }, [props.error])
+    console.log(props)
+    return <div>
+        <h2>Something went wrong</h2>
+        <h3>{props.error.message}</h3>
+        <button onClick={() => {
+            props.reset()
+        }}>Try Again</button>
+    </div>
+}
+
+src/app/page.js
+export default function Home() {
+
+  const isValid = true
+  if (isValid) {
+    throw 'oops'
+  }
+
+  return <div>
+    <h1>Home Page</h1>
+  </div>
+}
+.....................................................................................
+				Not Found Page
+
+
+if you want to customize the notfound page, you can override the page called "not-found.js"
+
+src/app/not-found.js
+import Link from "next/link";
+
+export default function NotFound() {
+    return <div>
+        <h1>Not Found</h1>
+        <p>Could not find requested Resource</p>
+        <Link href="/dashboard">Return to Dashboard</Link>
+    </div>
+}
+Testing:
+http://localhost:3000/about
+....................................................................................
+			     SEO - Meta data
+....................................................................................
+Next js has metadata API that can be used to define your application meta data eg meta and link tas inside HTML head element for imporved SEO and web shareability.
+
+There are two ways you can add metadata to your application
+
+1.config based meta data
+    Export a static meta data via obeject called Meta Data Object 
+    Dynamic meta data is nothing but getting data from the api and use that data 
+    for SEO, We can get dynamic meta data via "generateMetaData Function"
+
+2.File based meta data
+    Add static or dynamically generated special files to route segments.
+
+ "With both these options, Next js will automatically generate the relevant <head>   elements for your pages.
+
+
+1.config based meta data
+
+if you add meta infomration at root level(layout), will be available through out site
+
+static:
+
+src/app/layout.js
+
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: "TA Digital",
+  description: "This is CMS based app",
+  creator: "Subramanian Murugan",
+  keywords: ["TA Digital", "Next", "React"]
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+
+2.Dynamic meta data,like web title which need to be filled from api calls.
+
+
+src/app/posts/page.js
+
+import Link from "next/link";
+
+//meta data
+export const metadata = {
+    title: 'Post Master Page'
+}
+
+
+export async function fetchPosts() {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts')
+    const posts = await response.json()
+    //here we return promise
+    return posts;
+}
+
+export default async function PostsPage() {
+    const posts = await fetchPosts()
+    return <>
+        <h1>Posts Master Page</h1>
+        {/* Prepare dynamic menu */}
+        <ul>
+            {
+                posts.map(post => {
+                    return <li>
+                        <Link href={`/posts/${post.id}`}>{post.title}</Link>
+                    </li>
+                })
+            }
+        </ul>
+    </>
+}
+
+
+
+src/app/posts/[id]/page.js
+
+export async function fetchPosts() {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts')
+    const posts = await response.json()
+    //here we return promise
+    return posts;
+}
+
+
+export default function PostsDetailsPage({ params: { id } }) {
+    return <div>
+        <h1>{id} details</h1>
+    </div>
+}
+
+//dynamic meta data 
+
+export async function generateMetadata({ params, searchParams }, parent) {
+    const id = Number(params.id)
+    const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+    const post = await response.json()
+
+    //return meta data 
+    return {
+        title: `Post-${post.id}`
+    }
+
+}
+.....................................................................................
+			Caching,revalidation,ISR
+.....................................................................................
+
+
+
+
+
+
 
 
 
