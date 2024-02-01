@@ -1,0 +1,204 @@
+Server Actions are asynchronous functions that are executed on the server. They can be used in Server and Client Components to handle form submissions and data mutations in Next.js applications.
+
+Next old versions and page routers:
+'use client'
+
+import { useState } from "react"
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+    const [value, setValue] = useState('')
+    const create = async (ev) => {
+        ev.preventDefault()
+        console.log(ev.target.name.value)
+        //make api call
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: ev.target.name.value
+            })
+        })
+        console.log(res)
+    }
+    const handleChange = (event) => {
+        setValue(event.target.value);
+
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form onSubmit={create}>
+            <input type="text" value={value} name="name" onChange={handleChange} />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+
+Next 13 on wards/ Next 14 - Server actions.
+
+
+Step 1:
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async () => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 2:
+Arg would be formData instead of event
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 3
+Add necessary fields
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+step 4:
+Read form fields
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+        const expensesName = formData.get('expensesName')
+        console.log("expenses", expensesName)
+     
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Submit form:
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+        const expensesName = formData.get('expensesName')
+        console.log("expenses", expensesName)
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: expensesName
+            })
+        })
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+api:
+import { NextResponse } from "next/server"
+export async function POST(request, { params }) {
+    //read body 
+    const payload = await request.json()
+    console.log(payload)
+    return NextResponse.json({ payload })
+}
+.............................
+
+Redirection after form submission:
+import { redirect } from "next/navigation"
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+        const expensesName = formData.get('expensesName')
+        console.log("expenses", expensesName)
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: expensesName
+            })
+        })
+        redirect("/success")
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+

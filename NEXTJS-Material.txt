@@ -3948,15 +3948,620 @@ export async function generateMetadata({ params, searchParams }, parent) {
 .....................................................................................
 			Caching,revalidation,ISR
 .....................................................................................
+How to enable data cache? 
+
+in order to implement we use api which returns current local time, so that we can easily understand how caching is working. 
+Api:
+ "http://worldtimeapi.org/api/timezone/Asia/Kolkata"
+
+npx create-next-app@latest
+√ What is your project named? ... caching-isr
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in E:\session\TADigital\caching-isr.
+
+Using npm.
+
+Initializing project with template: app
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+
+With cache enabled:
+...................
+
+src/app/timecache/[city]/page.js
+
+export default async function CachePage(props) {
+
+    //with caching
+    const response = await fetch('http://worldtimeapi.org/api/timezone/Asia/Kolkata')
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}
+
+Testing:
+http://localhost:3000/timecache/Kolkata
+
+You can notice the time has not changed, because data has been cached.
+
+Without Cache: Cache is disabled:
+.................................
+export default async function CachePage(props) {
+
+     const response = await fetch('http://worldtimeapi.org/api/timezone/Asia/Kolkata', { cache: 'no-store' })
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}
+.....................................................................................
+			  Caching and Revalidation(clear Cache)
+.....................................................................................
+
+Time based Revalidation:
+
+1.Configuration as part of fetch api.
+
+src/app/timecache/[city]/route.js 
+
+export default async function CachePage(props) {
+const response = await fetch('http://worldtimeapi.org/api/timezone/Asia/Kolkata', { next: { revalidate: 2 } })
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}
+
+2.Configuration as part of page vig "Route Segment config"
+
+src/app/timecache/[city]/route.js 
+
+export const revalidate = 2
+export default async function CachePage(props) {
+ const response = await fetch('http://worldtimeapi.org/api/timezone/Asia/Kolkata')
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}	
 
 
 
+OnDemand Revalidation:
+......................
+
+Steps:
+1.You have to write rest api , which revalidates cache 
+  1.1.You can path 
+  1.2.You can use tag 
 
 
 
+src/app/timecache/[city]/page.js
+
+//route segment configuration
+//export const revalidate = 2
+
+export default async function CachePage(props) {
+
+  const response = await fetch('http://worldtimeapi.org/api/timezone/Asia/Kolkata', { next: { tags: ['collection'] } })
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}
+
+src/app/api/revalidate/route.js
+import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
+
+export async function GET(request) {
+    //get the path so that we can validate via path
+    const path = request.nextUrl.searchParams.get('path') || '/timecache/Kolkata';
+    //get the tag so that we can validate via tag
+    const collection =
+        request.nextUrl.searchParams.get('collection') || 'collection';
+
+    //revalidatePath(path);
+    revalidateTag(collection);
+    console.log('revalidated', path, collection);
+    // console.log('revalidated', path);
+    return NextResponse.json({
+        revalidated: true,
+        now: Date.now(),
+        cache: 'no-store',
+    });
+}
+
+Test:
+http://localhost:3000/api/revalidate
+
+after execting this , check the time. whether it has been updated or not.
+http://localhost:3000/timecache/Kolkata
+...................................................................................
+			   ISR 
+
+Incremental Static Rendering is nothing but create pages during build time and cache it, if any data change for the particular page , re render that page, after clearning the cache either by using time based or on demand or both.
+
+
+ISR = SSG + SSR  =  STATIC Rendering + dynamic Rendering ==build time + request time.
+
+How to implement ISR?
+
+1.Enable cache
+2.Select cache revalidation pattern
+3.override generateStaticParams method where you have to generate page
+  after build time, the page is cached.
+4.Revalidate the pre build page using revalidation pattern so that the page is re built.
+
+
+When you generate page ahead of time using "SSG", during building process also caching is enabled.
+
+Once if the app gone for the production, after that if you want rebuild page you can apply revalidation process. 
+
+ISR  = SSG + Revalidation.
+
+
+src/app/timecache/[city]/route.js 
+
+Note: you can apply cache revalidatation options either time or OnDemand, in same place you can apply both options.
+
+
+export default async function CachePage(props) {
+    const response = await fetch(`http://worldtimeapi.org/api/timezone/Asia/${props.params.city}`, { next: { tags: ['collection'] } });
+
+    const data = await response.json();
+    return <>
+        <h1>Time Now : {new Date(data.datetime).toLocaleTimeString()} </h1>
+    </>
+}
+
+export async function generateStaticParams() {
+    return [{ city: 'Kolkata' }];
+}
+
+src/app/api/revalidate/route.js
+import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
+
+export async function GET(request) {
+    //get the path so that we can validate via path
+    const path = request.nextUrl.searchParams.get('path') || '/timecache/Kolkata';
+    //get the tag so that we can validate via tag
+    const collection =
+        request.nextUrl.searchParams.get('collection') || 'collection';
+
+    //revalidatePath(path);
+    revalidateTag(collection);
+    console.log('revalidated', path, collection);
+    // console.log('revalidated', path);
+    return NextResponse.json({
+        revalidated: true,
+        now: Date.now(),
+        cache: 'no-store',
+    });
+}
+
+Testing:
+You can opt any revalidation technique (time or ondemand)
+
+http://localhost:3000/timecache/Kolkata
+
+revalidation:
+http://localhost:3000/api/revalidate
+...................................................................................
+			  How to Consume Graphql api inside Next.js
+.....................................................................................
+
+Basics of Graphql:
+
+What is Graphql?
+Graphql Sepcification
+Graphql implemention
+  -server implementation -Apollo Server
+  -client implementation -next js as client
+
+
+What is GraphQL?
+	GraphQL is a "new API" standard that provides a more efficient, powerful and flexible alternative to REST.
+
+
+API:
+ Appliation programming interface : Entry and exit point for data access.
+
+How apis are represented /encapsulated?
+ inside objects
+
+Types of apis:
+ 1.local api
+	api which is part of single runtime- jvm
+ 2.remote api
+       rpc
+	 -webservices -  rest api,soap api
+         -rpi - grpc
+         -tcp based apps
+         -smtp based app
+       etc...
+
+
+REST:
+   REST has not been designed to be user centric rather than data centric...
+
+if you define any api, which returns data set eg: if you query an api called products
+
+products may have so many fields, i dont want all fields which exposed by the api...
+
+GET  /api/products
+
+ =>[{
+  ...
+ }]
+
+At its core, GraphQL enables declarative data fetching where a client can specify exactly what data it needs from an API.
+
+Instead of multiple endpoints that return fixed data structures, a GraphQL server only exposes a single endpoint and responds with precisely the data a client asked for.
+
+GraphQL - A Query Language for APIs
+
+Most applications today have the need to fetch data from a server where that data is stored in a database. It’s the responsibility of the API to provide an interface to the stored data that fits an application’s needs.
+
+GraphQL is often confused with being a database technology. This is a misconception, GraphQL is a query language for APIs - not databases. In that sense it’s database agnostic and effectively can be used in any context where an API is used.
+
+A more efficient Alternative to REST
+....................................
+
+REST has been a popular way to expose data from a server. When the concept of REST was developed, client applications were relatively simple and the development pace wasn’t nearly where it is today. REST thus was a good fit for many applications. However, the API landscape has radically changed over the last couple of years. In particular, there are three factors that have been challenging the way APIs are designed:
+
+1. Increased mobile usage creates need for efficient data loading
+Increased mobile usage, low-powered devices and sloppy networks were the initial reasons why Facebook developed GraphQL. GraphQL minimizes the amount of data that needs to be transferred over the network and thus majorly improves applications operating under these conditions.
+
+2. Variety of different frontend frameworks and platforms
+The heterogeneous landscape of frontend frameworks and platforms that run client applications makes it difficult to build and maintain one API that would fit the requirements of all. With GraphQL, each client can access precisely the data it needs.
+
+3. Fast development & expectation for rapid feature development
+Continuous deployment has become a standard for many companies, rapid iterations and frequent product updates are indispensable. With REST APIs, the way data is exposed by the server often needs to be modified to account for specific requirements and design changes on the client-side. This hinders fast development practices and product iterations.
+
+.....................................................................................
+			  How to begin with GraphQL
+
+
+GraphQL is platform and language independant.
+
+GraphQL Can be classified into two category
+
+1.Client side - How to send data(Request) to the GraphQL server.
+  in order to send data from the client face book published one spec
+  called
+   "GraphQL Query language spec"
+
+2.Server side - How to build graph(object tree) from the data sources
+    "GraphQL Schema language spec"
+
+.....................................................................................
+
+.....................................................................................
+			  GraphQL request and response model.
 
 
 
+Declarative Programming:
+
+What you write, you have to get the same structure.
+
+The Query request is more readable,declarative. WHich micics the javascript object literal syntax.
+
+js object:
+
+ let user =  {
+     id:1,
+     name:'joe'
+     friends: [
+        'bar','foo'
+     ]
+  } 
+
+GraphQL Request payload : GraphQL Query
+
+GraphQL Client 
+
+POST /endpoint
+
+  {
+     id
+     name
+     friends { -----------------------------> GraphQLServer
+        name
+     }
+  } 
+
+ {
+     id
+     name
+          -----------------------------> GraphQLServer    
+ } 
+                        
+
+Response:JSON
+ {
+     "id":1,
+     "name":"joe"
+     "friends": [      <----------------------------- GraphQLServer
+        "bar","foo"
+     ]
+  } 
+.....................................................................................
+			     REST AND CURD
+
+Operations Type
+
+GET ------Read
+POST -----CREATE
+PUT ------UPDATE
+DELETE----Remove
+
+GET /api/products
+GET /api/products/1
+POST /api/products
+PUT /api/products
+DELETE /api/products/1
+.....................................................................................
+				GRAPHQL And CURD
+
+
+GraphQL uses only URL which exposes Service
+
+
+  {
+     id
+     name
+     friends { -----------HTTP POST------------------> GraphQLServer
+        name
+     }
+  } 
+
+Operation Types:
+
+1.Query === GET request in HTTP server
+  read
+2.mutation === HTTP POST,PUT,DELETE
+  create,update,delete
+3.subscription
+   Streaming
+
+query - a read only fetch
+mutation- a write followed by read
+subscription- a long live request that fetches data in response to source events.
+
+.................................................................................
+			 Graphql Query language - Spec
+.....................................................................................
+
+Client Side development:
+ In this module, we are going to learn how to send request(graphql) request to graphql server..
+
+
+Syntax:
+
+1.Selection set
+
+selectionSet: {
+ Selection
+}
+
+Selection:
+ fields
+ Fragment Spread
+ inline fragament
+
+
+SelectionSet : What type of operations (query,mutation,subscription)
+
+Read:
+
+query  {
+    fields
+    Fragment Spread
+    inline fragament
+}
+
+fields: could be what are the data you are expecting from the server
+eg:User information 
+
+in the server user information could be many fields
+ firstName,lastName,id,age,city,state,status,pic,stars,ranking....
+
+field List :
+ You are asking the server that , hey i want only these fields
+
+query  {
+   id
+   firstName  ====>POST request=========/url===>GraphQLServer==>Execute api
+   lastName   <====response would be json
+}
+
+Create,Update,Remove: Mutation
+
+mutation createUser(params) { 
+  user
+}
+mutation updateUser(params) { 
+  user
+}
+mutation removeUser(params) { 
+  user
+}
+
+Streaming: (read with Streaming)
+
+subscription  getStockQuote (params){
+  name
+  price
+  qty
+}
+.....................................................................................
+			  How to learn graphql query language
+
+in order to work with query language we need graphql server, if you dont have local graphql server we can use mock apis
+
+Fake api servers
+https://graphqlzero.almansi.me/#example-top
+https://countries.trevorblades.com/
+ 
+Tools to test graphql end points
+1.Client tools
+ playground
+ https://www.apollographql.com/docs/apollo-server/v2/testing/graphql-playground/
+ postman
+
+Core concepts:
+=>fields
+=>arguments
+=>aliases
+=>fragments
+=>variables
+=>directives
+=>Mutations
+=>inline fragments
+
+Fiedls:
+  At its simplest, GraphQL is about asking for specific fields on objects.
+
+Lets start by looking at a very simple query and the result we get when we run it.
+Simple Query:
+
+query {
+  countries {
+    code
+    name
+  }
+}
+query is name of the operation - read 
+"countries" is api name from the server   - function countries(){} - returns object-enity
+
+"code,name" are fields (variables)
+
+Simple Query:
+
+query {
+  countries {
+    code
+    name
+  }
+}
+Sample response:
+  "data": {
+    "countries": [
+      {
+        "code": "AD",
+        "name": "Andorra"
+      },
+      {
+        "code": "AE",
+        "name": "United Arab Emirates"
+      },
+      {
+        "code": "AF",
+        "name": "Afghanistan"
+      },
+      {
+        "code": "AG",
+        "name": "Antigua and Barbuda"
+      },
+      {
+        "code": "AI",
+        "name": "Anguilla"
+      },
+      {
+        "code": "AL",
+        "name": "Albania"
+      },
+      {
+        "code": "AM",
+        "name": "Armenia"
+      },
+      {
+        "code": "AO",
+        "name": "Angola"
+      },
+      {
+        "code": "AQ",
+        "name": "Antarctica"
+      },
+      {
+        "code": "AR",
+        "name": "Argentina"
+      },
+      {
+        "code": "AS",
+        "name": "American Samoa"
+      }
+]
+Short cut:
+ we dont need to specificy query keyword
+{
+  countries {
+    code
+    name
+  }
+}
+More fields:
+ How do we know that the api has more fields?
+In the playground, we can see docs in the playground
+
+ {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+    }
+}
+
+Inside Graphql server, the above fields are encapulated inside object.
+Object property may nest other objects.
+
+How to query nested values?
+
+ {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+        continent {
+            name
+        }
+    }
+}
+
+We can use method name syntax
+ query getAllCountries {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+        continent {
+            name
+        }
+    }
+}
+We will see where method syntax is useful.
 
 
 

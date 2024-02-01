@@ -312,6 +312,139 @@ Data cache reavalidation:
  clearning
 
 
+Revalidation:
+ How to clear data cache?
+
+->Types of revalidation
+  - Time based Revalidation.
+       i want to clear data cache,lets say after or every 1 min.
+
+->On-demand Revalidation.
+   - Clear the cache manually or based on some event..
+     eg: Using external api , after form submission..
+
+ Two way of on-demand revalidation
+    Tag-based revalidation
+    path-based revalidation
+
+Time based revalidation:
+  we can implement in two ways
+
+1.In fetch api
+2.Route Segment Config options
+
+fetch api:
+..........
+fetch('url',options)
+fetch('http://...',{next:{revalidate:3600}})
+
+2.Route Segement config options
+
+ Setting configuration parameters  inside code(layout,page,routeHander(fetch))
+ setting configuration parameter as by declaring variables.
+
+ eg:
+   export const variableName=value
+  
+   export const revalidate=3600
+
+page.js
+
+export const revalidate=3600
+
+export async function fetchProducts(){
+   
+    //const response = await fetch('url');
+     const response = await fetch('url',{next:{revalidate:2000}});
+}
+ 
+export default function ProductPage(){
+
+   return <>
+
+
+   </>
+}
+
+On-Deman Revalidation:
+  based on tag 
+  based on path
+
+fetch api:
+..........
+fetch('url',options)
+fetch('http://...',{next:{tags:['a']})
+ 
+Opting out:to choose not to participate in
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+
+fetch('http://...', {cache:'no-store'})
+   -Dont store this fetch response into cache. always you have to hit datasource.
+
+opting out can be implemented
+ 1.inside fetch 
+ 2.via route segment config options
+   export const dynamic='auto'
+
+...................
+Full Route Cache:
+  Cache pages either in build time or request time.
+
+Rendering is spilt into chunks(parts)
+   by route segment
+   by suspense boundary.
+
+chunk is rendered in two steps:
+
+  Server components - converted into a special format - RSC Payload.
+    RSC payload looks like json format.
+
+RSC:
+ ->Binary representation of rendered react server compoent.
+ ->It is used by React on the client side to update browser's dom
+
+RSC Has:
+  -rendered(page) result of server compoent
+  -place holder for client component and there js references
+  -any props passed from server compoent to client compoent.
+
+................................................................................
+
+Client Side: Router Cache:
+............................
+RSC Payload stored inside browser - under Router Cache.
+Router cache is used to improve performance of navigation
+   ->previously visited routes
+   ->Prefetching future routes
+
+Router cache only caches "static route"
+Router cache dont cache  "dynamic route"
+
+invalidation:
+ ->Page refresh
+ ->time based
+    static rendered page: 5 mins
+    dynamically rendered page:30 secs
+
+.....................................................................................
+
+Dynamic rendering:
+  -request time
+
+dynamic functions:
+  functions which trigger dynamic rendering.
+
+dynamic rendering can be triggered by "data change in the api" or dynamic functions.
+
+->coookies
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+			ISR - Caching,revalidation
+....................................................................................
+
+
+
+
 
 
 
