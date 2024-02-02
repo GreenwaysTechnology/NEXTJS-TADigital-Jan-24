@@ -4161,6 +4161,219 @@ http://localhost:3000/timecache/Kolkata
 
 revalidation:
 http://localhost:3000/api/revalidate
+.....................................................................................
+			Server Actions and Mutations
+.....................................................................................
+
+What is server actions?
+
+ Server actions are asynchronous functions that are executed on the server.
+ Server actions can be used inside server and client components to handle form  submissions and data mutations in next js apps.
+ This is feature introduced in next 13 as beta , in next 14 has been stablized.
+
+Convention:
+ A server actions can be defined with "use server" directive.
+ you can place the directive at the top of an async function to mark the function as 
+ a server action or you can mark at top of the file as well.
+
+Server componets:
+
+export default function Page(){
+    //server action
+   async function create(){
+    "use server"
+
+  }
+}
+
+Client Components:
+
+ Client components cant declare like above, but it should import 
+
+src/app/formaction/actions.js
+
+'use server'
+
+export async function create(){
+
+}
+
+src/app/client-component.js
+
+'use client'
+import {create} from '@/app/formaction/actions'
+
+export default function ClientCompoent(){
+  //use create function
+}
+.....................................................................................
+
+Form handling without server actions : In old next versions:
+...........................................................
+
+'use client'
+
+import { useState } from "react"
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+    const [value, setValue] = useState('')
+    const create = async (ev) => {
+        ev.preventDefault()
+        console.log(ev.target.name.value)
+        //make api call
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: ev.target.name.value
+            })
+        })
+        console.log(res)
+    }
+    const handleChange = (event) => {
+        setValue(event.target.value);
+
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form onSubmit={create}>
+            <input type="text" value={value} name="name" onChange={handleChange} />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+The above can be extecuted in server side using server actions.....
+.....................................................................................
+Next 13 on wards/ Next 14 - Server actions.
+
+
+Step 1:
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async () => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 2:
+Arg would be formData instead of event
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+
+
+Step 3
+Add necessary field attributes like name
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+step 4:
+Read form fields
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+      'use server'
+      
+        const expensesName = formData.get('expensesName')
+        console.log("expenses", expensesName)
+     
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 5:Submit form:
+
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    const create = async (formData) => {
+        'use server'
+        const expensesName = formData.get('expensesName')
+        console.log("expenses", expensesName)
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: expensesName
+            })
+        })
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add an Expenses" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+The data processing can be simplified by using "useFormState" hook. but it still in canary.
+https://react.dev/reference/react-dom/hooks/useFormState
 ...................................................................................
 			  How to Consume Graphql api inside Next.js
 .....................................................................................
@@ -4562,6 +4775,2117 @@ We can use method name syntax
     }
 }
 We will see where method syntax is useful.
+...................................................................................
+.....................................................................................
+			   Arguments
+.....................................................................................
+
+What if i want to get data based  on some condition or conditions?
+
+Synax:
+
+ query getCountryByCode {
+     country(code:"US"){
+          name
+          capital
+          currency
+          phone
+     }
+     continent(code:"AS") {
+         name
+     }
+}
+Here code is variable , "US" is value
+
+Arg can be static or dynamic arg
+
+Static means passing hardcoded value..
+
+ query getCountryByCode {
+     country(code:"US"){
+          name
+          capital
+          currency
+          phone
+     }
+     continent(code:"AS") {
+         name
+     }
+}
+...................................................................................
+			 Dynamic parameters and arguments -Variables
+...................................................................................
+
+Variables:
+ Variables are place holders to have dynamic values.
+ In case of clients app,you may select values from the drop down or from text field
+
+Variables are introduced in graphql via "$VariableName"
+
+Steps: 
+1.replace static values in the query with $variable
+2.Declare the variable ($VariableName) as part of the query header
+
+Static
+ query getCountryByCode {
+     country(code:"US"){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+Dynamic
+ query getCountryByCode($variableN	ame:DataType) {
+     country(code:$variableName){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+ query getCountryByCode($code:ID!) {
+     country(code:$code){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+How to pass values to this Query?
+ Via Query variables in playground.
+
+{
+    "code":"IN"
+}
+Response:
+{
+    "data": {
+        "country": {
+            "name": "India",
+            "capital": "New Delhi",
+            "currency": "INR",
+            "phone": "91"
+        }
+    }
+}
+...................................................................................
+			Default Arg
+....................................................................................
+
+What if i dont send the query variable as input, we can substitue default value
+
+ query getCountryByCode($code:ID!="IN") {
+     country(code:$code){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+
+if you pass  country code, you will get response
+{
+    "code":"US"
+}
+Response:
+
+{
+    "data": {
+        "country": {
+            "name": "United States",
+            "capital": "Washington D.C.",
+            "currency": "USD,USN,USS",
+            "phone": "1"
+        }
+    }
+}
+if you dont pass country code
+{
+    "data": {
+        "country": {
+            "name": "India",
+            "capital": "New Delhi",
+            "currency": "INR",
+            "phone": "91"
+        }
+    }
+}
+....................................................................................
+			Short cut :without method Name 
+ query ($code:ID!="IN") {
+     country(code:$code){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+Recommendation : having method name for more readablity.
+
+ query getCountryByCode($code:ID!="IN") {
+     country(code:$code){
+          name
+          capital
+          currency
+          phone
+     }
+     
+}
+What can be parameter or arg types?
+
+1.Can be primitives(Scalar types) - ID,String,Int,Float,Enums
+2.Can be complex types - Object Types
+3.Input type
+ Input is special complex type, used to represent input parameters.
+ Input types are very usefull incase of mutation
+
+I want to get Language information.
+
+query getlanguageInfo($filter:LanguageFilterInput) {
+    languages(filter:$filter) {
+        code 
+        name
+        native
+        rtl
+    }
+}
+
+After execution , you will get all language info
+
+{
+    "data": {
+        "languages": [
+            {
+                "code": "af",
+                "name": "Afrikaans",
+                "native": "Afrikaans",
+                "rtl": false
+            },
+            {
+                "code": "am",
+                "name": "Amharic",
+                "native": "አማርኛ",
+                "rtl": false
+            },
+            {
+                "code": "ar",
+                "name": "Arabic",
+                "native": "العربية",
+                "rtl": true
+            },
+            {
+                "code": "ay",
+                "name": "Aymara",
+                "native": "Aymar",
+                "rtl": false
+            },
+            {
+                "code": "az",
+                "name": "Azerbaijani",
+                "native": "Azərbaycanca / آذربايجان",
+                "rtl": false
+            },
+            {
+                "code": "be",
+                "name": "Belarusian",
+                "native": "Беларуская",
+                "rtl": false
+            },
+            {
+                "code": "bg",
+                "name": "Bulgarian",
+                "native": "Български",
+                "rtl": false
+            }
+]
+
+After giving query variable:
+
+{
+    "filter": {
+        "code" : {
+            "eq" : "en"
+        }
+    }
+}
+
+Response :
+{
+    "data": {
+        "languages": [
+            {
+                "code": "en",
+                "name": "English",
+                "native": "English",
+                "rtl": false
+            }
+        ]
+    }
+}
+....................................................................................
+...................................................................................
+			Multiple arg variables
+...................................................................................
+
+Multiple Variables:
+....................
+
+query getProfile($id:Int,$withFriends:Boolean=false) {
+
+     user(id:$id,withFriends:$withFriends) {
+	  name
+          pic
+      }
+}
+Passing values:
+{"id":1 , "withFriends" : true}
+{"id":2 }
+.....................................................................................
+.....................................................................................	
+                       Alises
+....................................................................................
+
+Filed Alises gives dummy name for keys..
+
+Syntax:
+ without Aliases:
+
+query { 
+  user(id:1){
+    id 
+    name
+  }
+}
+Response:
+{
+  "data": { 
+    "user": {
+	"id":1
+         "name":"Subramanian"
+    }
+  }
+}
+
+With Alises:
+
+query { 
+  subramanian:user(id:1){
+    id 
+    name
+  }
+}
+Response:
+{
+  "data": { 
+    "subramanian": {
+	"id":1
+         "name":"Subramanian"
+    }
+  }
+}
+eg:
+query getlanguageInfo($filter:LanguageFilterInput) {
+    englishLanguage:languages(filter:$filter) {
+        code 
+        name
+        native
+        rtl
+    }
+}
+{
+    "data": {
+        "englishLanguage": [
+            {
+                "code": "en",
+                "name": "English",
+                "native": "English",
+                "rtl": false
+            }
+        ]
+    }
+}
+.....................................................................................
+			Fragements : Resuable Selection Set
+.....................................................................................
+
+Without fragement:
+...................
+
+query {
+   user(id:2){
+      friends {
+	id 
+        name
+        pic
+      }
+      mutualfriends {
+	id 
+        name
+        pic
+      }
+   }
+}
+Here friends and mutual friends are having same set of data
+...................................................................................
+With Fragements:
+...............
+query {
+   user(id:2){
+      friends {
+	...friendsFields
+      }
+      mutualfriends {
+	...friendsFields
+      }
+   }
+}
+
+fragement friendsFields on User{
+        id 
+        name
+        pic
+}
+
+eg:
+query GetA1AndA2Countries {
+    a1Countries:countries {
+        ...countryInfo
+    }
+    a2Countries:countries {
+        ...countryInfo
+    }
+}
+fragment countryInfo on Country {
+    name
+    capital
+}
+Response:
+"data": {
+        "a1Countries": [
+            {
+                "name": "Andorra",
+                "capital": "Andorra la Vella",
+                "__typename": "Country"
+            },
+            {
+                "name": "United Arab Emirates",
+                "capital": "Abu Dhabi",
+                "__typename": "Country"
+            },
+            {
+                "name": "Afghanistan",
+                "capital": "Kabul",
+                "__typename": "Country"
+            }
+	 ],
+	 "a2Countries": [
+            {
+                "name": "Andorra",
+                "capital": "Andorra la Vella",
+                "__typename": "Country"
+            },
+            {
+                "name": "United Arab Emirates",
+                "capital": "Abu Dhabi",
+                "__typename": "Country"
+            },
+            {
+                "name": "Afghanistan",
+                "capital": "Kabul",
+                "__typename": "Country"
+            }
+	 ]
+}
+.....................................................................................				   Directives
+....................................................................................
+Directives are built in functions which provides some utilites.
+Directives starts with @DirectiveName(arg:Type)
+
+Built in directives
+@include(if:Boolean)
+  conditionally include this field in the result if the arg is true
+@skip(if:Boolean)
+   conditionally exclude this field in the result if the arg is true
+
+query getProfile($id:Int,$withFriends:Boolean=false){ 
+	
+     user(id:$id) {
+	name
+	pic
+	friends @include(if:$withFriends){
+		name
+	}
+     }  
+      
+
+}
+
+Query Variable:
+ {"id":5, "withFriends":true}
+
+eg:
+query getLanguage($code:ID!,$rtl:Boolean!) {
+    language(code:$code){
+        name 
+        native @include(if:$rtl)
+    }
+}
+
+Query Variable:
+{
+    "code":"en",
+    "rtl":true
+}
+
+Response:
+{
+    "data": {
+        "language": {
+            "name": "English",
+            "native": "English"
+        }
+    }
+}			
+
+False condition:
+Query Variable:
+{
+    "code":"en",
+    "rtl":false
+}		
+Response:
+{
+    "data": {
+        "language": {
+            "name": "English"
+        }
+    }
+}
+....................................................................................
+				Mutations
+...................................................................................
+
+How to send payload to create,update,delete
+IN REST
+
+POST=>CREATE
+PUT=>UPDATE
+DELETE=>REMOVE
+GET=>READ
+
+Mutations 
+........
+
+mutation is keyword used to create,update,remove...
+....................................................................................
+				Mutations
+...................................................................................
+
+How to send payload to create,update,delete
+IN REST
+
+POST=>CREATE
+PUT=>UPDATE
+DELETE=>REMOVE
+GET=>READ
+
+Mutations 
+........
+
+mutation is keyword used to create,update,remove...
+
+API url :
+https://graphqlzero.almansi.me/api
+
+CREATE:
+.......
+eg:
+mutation CreatePost(
+  $input: CreatePostInput!
+) {
+  createPost(input: $input) {
+    id
+    title
+    body
+  }
+}
+
+Query Variables:
+{
+  "input": {
+    "title": "A Very Captivating Post Title",
+    "body": "Some interesting content."
+  }
+}
+
+Response:
+
+{
+    "data": {
+        "createPost": {
+            "id": "101",
+            "title": "A Very Captivating Post Title",
+            "body": "Some interesting content."
+        }
+    }
+}
+........................
+
+Update :
+mutation UpdatePost($id: ID!,$input: UpdatePostInput!) {
+  updatePost(id: $id, input: $input) {
+    id
+    body
+  }
+}
+Query Variable
+
+{
+  "id": 1,
+  "input": {
+    "body": "Some updated content."
+  }
+}
+
+Response
+{
+  "updatePost": {
+    "id": "1",
+    "body": "Some updated content."
+  }
+}
+....................................................................................
+Delete :
+
+mutation RemovePost($id: ID!) {
+  deletePost(id: $id)
+}
+Query Variable:
+
+{
+  "id": 101
+}.
+Response:
+{
+  "deletePost": true
+}
+....................................................................................
+			 Server side : GraphQL schema Language
+....................................................................................
+How to build rest api?
+  According to rest spec,The problems(domain) are represented as "resources"
+
+Resource represents a Object which expose data and api.
+eg:CustomerResource,OrderResource,ProductResource.
+
+Resources are identified by URL 
+eg:/
+	/api/products and Methods are "GET/POST/PUT/DELETE"
+
+How to build graphql applications?
+ According to graphql specifications problems are represented as "Schema"
+Schema represents domain models.
+Domain Models are represetented as Objects | models | entity.
+
+eg:
+ Customer,Order,Product.
+
+In Programming side schema is represented as "Objects and its relationship"
+Object and its relationship forms "graph" - Object Graph
+.....................................................................................
+How to start write graphql apps?
+   
+   In order to begin with, we need learn there is language called "SDL" - Schema definition language.
+
+SDL Core concepts:
+.................
+
+Flow of client and server
+
+query getUserData {
+   user {
+     name ===>SDL============>Server==>SDL===Entity==>Biz logic(Services)===>Data 									sources
+  }
+}
+
+Both client and server talks via common language called "SDL" language
+
+SDL provides language independent abstraction.
+
+	     SDL----->|JAVA/js/python/c++ ...
+
+
+...................................................................................	
+		            	How to write schema
+....................................................................................
+
+The schema file is saved as "fileName.schema".
+
+Schema is collection of Object types that contain fields.Each field has a type of its own.
+A field type can be scalar(primitives Such as Int,String) or it can another object type.eg User can have Address type.
+
+We need to use with key word called "type"
+
+type TypeName {
+  field:Datatype
+}
+....................................................................................
+SDL Defines its language and platform independant data types
+
+1.scallar types
+2.Custom types/Reference Types/Object types.
+
+1.Scallar types
+ Scallares are primitive types in your language.
+
+1.Int -32 bit signed integer
+2.String-UTF-8 char sequence
+3.Boolean - true or false
+4.Float - signed Double
+5.ID(Serialized String) - A unique identifier.
+
+2.Custom types
+ Similar to classes in Object oriented languages like c++ ,java,C#,Typescript
+
+type User{
+  id:ID
+  firstName:String
+  lastName:String
+  age:Int
+  points:Float
+  status:Boolean
+}
+
+Object can have other objects : Nested Object
+  HAS-A relationship or Depedency Injection
+
+
+type Address {
+  city:String
+  state:String
+  zipCode:String
+}
+
+type User{
+  id:ID
+  firstName:String
+  lastName:String
+  age:Int
+  points:Float
+  status:Boolean
+  address:Address
+}
+...................................................................................
+...................................................................................
+			Handling null and not null
+..................................................................................
+
+Client Query with data
+
+{
+  name =====> response {name:'Subramanian'}
+}
+
+
+Client Query without data
+
+{
+  name =====> response {name:null}
+}
+null values some times create issues in the client applications, what if i want to return always value without null.
+
+I dont want null value for a given field? How to force the field must have data or must not have null?
+
+=>Not null fields
+
+Syntax:
+  fieldName:Type!
+! =>Not null
+
+type Address {
+  city:String!
+  state:String
+  zipCode:String
+}
+
+type User{
+  id:ID!
+  firstName:String!
+  lastName:String!
+  age:Int
+  points:Float
+  status:Boolean
+  address:Address
+}
+.................................................................................
+			Collection - List of similar Values
+..................................................................................
+
+A field may have one or more values
+
+fieldName:[DataType]
+ Here Datatype can be scalar type or Object type
+
+fieldName:[String] | [Int] | [Float]
+fieldName:[Address] [Order] [Items]
+
+Collection can also be not null
+
+fieldName:[String]! | [Int]! | [Float]!
+fieldName:[Address]! [Order]! [Items]!
+
+			Query Type
+.....................................................................................
+
+Query is collection of apis
+Query api can accept input and return values
+
+No parameter: only Return
+..........................
+field:Type
+
+eg:
+
+type Query {
+  name:String
+  user:User
+  users:[User]
+}
+Client side:Query language 
+{
+  name
+}
+{
+  user {
+   id
+   name
+  }
+}
+{
+  users {
+     user { 
+	id 
+	 name
+     }
+  }
+}
+Parameters, And Return value:
+.............................
+field:Type
+
+type Query {
+   name(name:String,message:String):String
+   userById(id:ID):User
+   usersByCity(city:String):[User]!
+}
+.....................................................................................
+			 Advanced Types
+.....................................................................................
+
+=>Mutation
+=>Subscription
+=>Input
+=>Enum
+=>Union
+=>Interface
+
+Mutation:
+ Write and Read operations where as Query type is read only.
+
+Signature of the Mutation:
+
+type Mutation{
+  createUser(id:ID,name:String,lastName:String,age:Int):User
+  updateUser(id:ID,user:User):User
+  removeUser(id:ID):User
+}
+
+in the above example, more no parameters we need to pass, which makes your code more difficult to understand and read thats where we have new type called "INPUT" type.
+...................................................................................
+			  Input Types
+.................................................................................
+
+Input types are special object types that allow you to provide hierachical data as arguments to fields(as apposed to providing only flat scalar args).
+type Mutation{
+ #Flat scalar args
+  createUser(id:ID,name:String,lastName:String,age:Int):User
+}
+
+type Address {
+  city:String!
+  state:String
+  zipCode:String
+}
+
+type User{
+  id:ID!
+  firstName:String!
+  lastName:String!
+  age:Int
+  points:Float
+  status:Boolean
+  address:Address
+}
+
+input CreateUserInput{
+  id:ID!
+  name:String
+  lastName:String
+  age:Int
+}
+
+type Mutation{
+  createUser(userInput:CreateUserInput!):User
+}
+...................................................................................
+			   Enums
+....................................................................................
+An Enum is similar to scalar types, but its legal values are defined in the schema
+
+enum Gender {
+  MALE
+  FEMALE
+  THIRD
+}
+How to use Enum
+
+
+type User{
+  id:ID!
+  firstName:String!
+  lastName:String!
+  gender:Gender
+  age:Int
+  points:Float
+  status:Boolean
+  address:Address
+}
+.....................................................................................
+			  Union and Interfaces
+....................................................................................
+Union:
+  Unions and interfaces abstract graphql types that enables a schema field to return one of multiple object types.
+
+union Media = Image | Video
+
+type Query {
+  getMedia:Media
+}
+
+Union type must not be scallar type values it must be always object
+
+ union Foo: String | Int => which is wrong
+.....................................................................................
+                        Interfaces
+.....................................................................................
+
+interface represents common fields that multiple objects can include.
+
+interface Book{ 
+  title:String!
+  author:String!
+}
+
+type TechnicalBook implments Book { 
+  title:String!
+  author:String!
+  X:String
+}
+
+
+type StoryBook implments Book { 
+  title:String!
+  author:String!
+  Y:String
+}
+....................................................................................
+			  Custom Scallar
+
+Graphql SDL provides basic core types - Int,String,Boolean,ID,Float
+What if i want other types like Date,Time
+
+How to define custom scalar?
+
+scalar Date
+
+type User{
+  id:ID!
+  firstName:String!
+  lastName:String!
+  gender:Gender
+  dob:Date
+  age:Int
+  points:Float
+  status:Boolean
+  address:Address
+}
+Date if you declare , you wont get date value, rather we need to write logic how date is represented in server side.
+....................................................................................
+			 Custom Directives
+....................................................................................
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope
+) on FIELD_DEFINITION | OBJECT | INTERFACE
+
+Here we create @cacheControl directives, we need to write logic in the server side code..
+....................................................................................
+			Implementation
+....................................................................................
+Requirement:
+ 1.You must have SDL before starting any code
+
+Graphql application can be written in any language..
+
+Javascript implmentation (runtime is Node.js)
+
+1.graphql.js
+  =>Core framework written by facebook 
+  =>You can run standalone or on top of  web servers
+  =>Express.js is underlying framework
+2.Apollo
+   =>It is platform for building graphql apps called "SuperGraphs"
+   =>It is written on the top of express server with microservice developments.
+
+Components of Apollo(Graphql apps):
+
+1.Apollo Server
+2.Schema definitions - SDL
+3.Resolvers - Schema Implmenetation - where we write biz logic
+4.Datasources- Database or another rest api...
+.....................................................................................
+
+Apollo Server setup:
+....................
+
+Steps:
+
+1.Define Schema
+2.Write Biz logic based on Schema - Resolvers
+3.Start Apollo Server
+4.Query data from the client.
+
+Define Schema:
+ Schema definition is represented as "Plain String"
+
+Steps:
+1.src/index.ts
+
+//Define schema
+const typeDefs=`
+#Simple Query which returns Hello World
+ type Query {
+    hello:String    
+ }
+`
+2.Biz logic : write biz logic for Query: resolover 
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        hello() {
+            return "Hello World"
+        }
+    }
+    //Mutation
+    
+    //Subscription
+}
+
+3.We need to deploy(Parse schema,bind resolvers)
+
+3.1. import ApolloServer  and create instance
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+3.2.Start web Container and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Running:
+package.json
+{
+  "name": "graphql-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "start": "npm run compile && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.10.0",
+    "graphql": "^16.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.3.3"
+  }
+}
+
+start the server
+
+npm start
+
+Deploy the app:
+http://localhost:4000/
+
+query {
+  hello
+}
+
+response:
+{
+  "data": {
+    "hello": "Hello World"
+  }
+}
+....................................................................................
+			Multiple Apis
+....................................................................................
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+
+//Define schema
+const typeDefs = `
+#Simple Query which returns Hello World
+ type Query {
+    hello:String
+    greet:String
+    hai:String    
+ }
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        hello() {
+            return "Hello World"
+        },
+        hai() {
+            return 'Hai GraphQL'
+        },
+        greet() {
+            return 'Greet GraphQL'
+        }
+
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+.....................................................................................
+			Object Types and Queries
+....................................................................................	import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+
+//Define schema
+const typeDefs = `
+#Simple Query which returns Hello World
+ 
+ type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+ }
+
+ type Query {
+   user:User
+ }
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        user() {
+            //return object
+            return {
+                id: 1,
+                firstName: 'Subramanian',
+                lastName: 'Murugan',
+                age: 10,
+                points: 10.5,
+                status: true
+
+            }
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Testing:
+query {
+  user {
+    id
+    firstName
+    status
+  }
+}
+{
+  "data": {
+    "user": {
+      "id": "1",
+      "firstName": "Subramanian",
+      "status": true
+    }
+  }
+}
+.................................................................................
+			Collections
+................................................................................	
+src/mock-data/users.ts
+export const USERS: Array<any> = [{
+    id: 1,
+    firstName: 'Subramanian',
+    lastName: 'Murugan',
+    age: 10,
+    points: 10.5,
+    status: true
+
+},
+{
+    id: 2,
+    firstName: 'Geetha',
+    lastName: 'Subramanian',
+    age: 34,
+    points: 10.5,
+    status: true
+
+},
+{
+    id: 3,
+    firstName: 'Murugan',
+    lastName: 'Palanisamy',
+    age: 58,
+    points: 10.5,
+    status: true
+
+}
+]
+
+	
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+import { USERS } from "./mock-data/users.js"
+
+//Define schema
+const typeDefs = `
+#Simple Query which returns Hello World
+ 
+ type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+ }
+
+ type Query {
+   user:[User]
+ }
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        user() {
+            //return object
+            return USERS
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+.....................................................................................
+....................................................................................
+			 Handling Args and Parameters
+...................................................................................
+How to handle args/parameters?
+ A Resolver function takes four positional args
+
+fun(parent,args,contextValue,info){
+
+
+}
+args it is variable going to hold parameters passed by clients.
+args value is going to be literal object
+How many parameters if you pass, all parameters are stored inside single literal object
+....................................................................................
+			 Handling Args and Parameters
+...................................................................................
+How to handle args/parameters?
+ A Resolver function takes four positional args
+
+fun(parent,args,contextValue,info){
+
+
+}
+args it is variable going to hold parameters passed by clients.
+args value is going to be literal object
+How many parameters if you pass, all parameters are stored inside single literal object
+
+....................................................................................
+			 Handling Args and Parameters
+...................................................................................
+How to handle args/parameters?
+ A Resolver function takes four positional args
+
+fun(parent,args,contextValue,info){
+
+
+}
+args it is variable going to hold parameters passed by clients.
+args value is going to be literal object
+How many parameters if you pass, all parameters are stored inside single literal object
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+import { USERS } from "./mock-data/users.js"
+
+//Define schema
+const typeDefs = `
+#Simple Query which returns Hello World
+ type Query {
+     hello(name:String):String
+ }
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        hello(parent, args, contextValue, info) {
+            console.log(args)
+            const { name } = args
+            // return `Hello ${args.name}`
+            return `Hello ${name}`
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Testing:
+Dynamic variables
+query SayHello($name: String) {
+  hello(name: $name)
+}
+Query Variable
+{
+  "name": "Subramanian"
+}
+{
+  "data": {
+    "hello": "Hello Subramanian"
+  }
+}
+....................................................................................
+			Handling Complex Args and Parameters
+
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+import { USERS } from "./mock-data/users.js"
+
+//Define schema
+const typeDefs = `
+#Simple Query which returns Hello World
+ 
+ type User {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+ }
+ input UserResponseInput {
+    id:ID
+    firstName:String
+    lastName:String
+    age:Int
+    points:Float
+    status:Boolean
+ }
+ type Query {
+   users:[User]
+   userById(id:ID!):User
+ }
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        users() {
+            //return object
+            return USERS
+        },
+        //here _ is just convention to skip the arg
+        userById(_, args) {
+            const { id } = args
+            //filter data based on id
+            return USERS.find(user => {
+                return user.id === +id
+            })
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Query:
+query Users($userByIdId: ID!) {
+  userById(id: $userByIdId) {
+    id
+    firstName
+    lastName
+  }
+}
+
+QueryVariable:
+{
+  "userByIdId": 2
+}
+Response:
+{
+  "data": {
+    "userById": {
+      "id": "2",
+      "firstName": "Geetha",
+      "lastName": "Subramanian"
+    }
+  }
+}
+
+if parameter does not match , it will return null value...
+.....................................................................................
+			Nested Data Structure
+.....................................................................................
+
+I have data Structure
+
+const users = [
+  { 
+   id:1,
+   name:'A',
+   email:'a@gmail.com'
+   address: {
+    city:'b',
+    state:'c'
+   }
+  }
+]
+
+Schema:
+//Define schema
+const typeDefs = `
+
+type User {
+   id:ID!
+   name:String
+   email:String
+   address:Address
+}
+type Address{
+    city:String
+    state:String
+}
+type Query {
+    users:[User]
+}
+
+In database world user and Address would have stored into different tables.
+CREATE Table users(id int,name varchar(10),email varchar(20,constraint c primaryKey(id))
+
+CREATE Table address(city varchar(20),state varchar(20),id references users id)
+...................................................................................
+Mock data:
+
+//Mock data
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+
+const ADDRESS = [{
+    city: 'Coimbatore',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2 //linking field
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3 //linking field
+}]
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+
+//Mock data
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+
+const ADDRESS = [{
+    city: 'Coimbatore',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2 //linking field
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3 //linking field
+}]
+
+//Define schema
+const typeDefs = `
+
+type User {
+   id:ID!
+   name:String
+   email:String
+   address:Address
+}
+type Address{
+    city:String
+    state:String
+}
+type Query {
+    users:[User]
+}
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        users() {
+            //return object
+            return USERS
+        },
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Testing:
+query Users {
+  users {
+    id
+    name
+    email
+    address {
+      city
+    }
+  }
+}
+
+Response:
+{
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "name": "A",
+        "email": "a@gmail.com",
+        "address": null
+      },
+      {
+        "id": "2",
+        "name": "B",
+        "email": "b@gmail.com",
+        "address": null
+      },
+      {
+        "id": "3",
+        "name": "C",
+        "email": "c@gmail.com",
+        "address": null
+      }
+    ]
+  }
+}
+Here address is missing, that means address is only part of schema but not part of the resolver
+
+How to link users with Address?
+...................................................................................
+			  Resolver Chains
+..................................................................................
+Resolver chain means coimbing results of one resolver with in nested resolver
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from '@apollo/server/standalone'
+
+//Mock data
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+
+const ADDRESS = [{
+    city: 'Coimbatore',
+    state: 'TN',
+    id: 1 //linking field
+},
+{
+    city: 'BNG',
+    state: 'KA',
+    id: 2 //linking field
+},
+{
+    city: 'HYD',
+    state: 'TS',
+    id: 3 //linking field
+}]
+
+//Define schema
+const typeDefs = `
+
+type User {
+   id:ID!
+   name:String
+   email:String
+   address:Address
+}
+type Address{
+    city:String
+    state:String
+}
+type Query {
+    users:[User]
+}
+`
+//Define Resolver: biz logic
+const resolvers = {
+    //Query Implmentation
+    Query: {
+        users() {
+            //return object
+            return USERS
+        },
+    },
+    //Resolver Chain
+    User: {
+        address(parent, args, contextValue, info) {
+            console.log(parent)
+            //connect parent with child: connect this address with user 
+            return ADDRESS.find(address => {
+                //linking field === parent field
+                return address.id === parent.id
+            })
+        }
+    }
+    //Mutation
+
+    //Subscription
+}
+
+//create instance of ApolloServer and pass schema , resolver as config
+
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+Testing:
+query Users {
+  users {
+    id
+    name
+    email
+    address {
+      city
+    }
+  }
+}
+
+Response:
+{
+  "data": {
+    "users": [
+      {
+        "id": "1",
+        "name": "A",
+        "email": "a@gmail.com",
+        "address": {
+          "city": "Coimbatore"
+        }
+      },
+      {
+        "id": "2",
+        "name": "B",
+        "email": "b@gmail.com",
+        "address": {
+          "city": "BNG"
+        }
+      },
+      {
+        "id": "3",
+        "name": "C",
+        "email": "c@gmail.com",
+        "address": {
+          "city": "HYD"
+        }
+      }
+    ]
+  }
+}
+....................................................................................
+				Mutations
+.....................................................................................
+
+How to send data for insert,update,remove.
+
+type Mutation {
+  //add apis
+}
+
+
+
+import { ApolloServer } from "@apollo/server"
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//Define Schema
+const typeDefs = `
+type User {
+ id:ID!
+ name:String
+ email:String
+}
+
+type Query {
+  users:[User]
+  user(id:ID!):User
+}
+
+input UserInput{
+    id:ID!
+    name:String
+    email:String
+}
+type Mutation {
+   createUser(userInput:UserInput):User
+}
+`
+const USERS = [{
+    id: 1,
+    name: 'A',
+    email: 'a@gmail.com'
+},
+{
+    id: 2,
+    name: 'B',
+    email: 'b@gmail.com'
+},
+{
+    id: 3,
+    name: 'C',
+    email: 'c@gmail.com'
+}
+
+]
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        users() {
+            return USERS
+        },
+        user(_, args) {
+            return USERS.find(user => user.id === +args.id)
+        }
+    },
+    //Mutation
+    Mutation: {
+        //add new User
+        createUser(_, args) {
+            //call api to insert users or call api to insert users into db using prisma
+            USERS.push(args.userInput)
+            console.log(args.userInput)
+            return args.userInput
+        }
+    }
+
+}
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log(`Apollo Server is Ready at ${url}`)
+
+....................................................................................
+				Context and ContextValue
+....................................................................................
+
+Context is Object - can be used to share information across application.
+Context information can be accessed inside resolvers,plugins,__resolverType with convention name called "contextValue".
+
+Contex Object:
+=>To read data based connection info
+=>Auth and authorization details
+=>Data Sources for fetching Data..
+etc...
+
+
+context Function:
+ It is function which is part of "ApolloServer"
+
+const MyContext{
+   token:String
+   dataSource:String
+}
+
+const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers,
+})
+
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async()=>{
+	return {
+	   token:'....',
+           dataSource:'...'
+	
+        }
+    }
+})
+
+
+ Query: {
+        books(parent,args,contextValue,info) {
+            contextValue.token...
+        }
+    },
+
+eg:
+import { RESTDataSource } from "@apollo/datasource-rest"
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone"
+
+//type class 
+export class Book {
+    title: string;
+    author: string;
+}
+
+export class BooksAPI extends RESTDataSource {
+    constructor() {
+        super()
+        this.baseURL = "http://localhost:3000/"
+    }
+    //apis:biz api
+    async getBooks() {
+        //http://localhost:3000/books
+        return this.get<Book[]>(`books`)
+    }
+    //save book
+    async postBook(book) {
+        return this.post<any>(`books`, book).then(resp => resp.data)
+    }
+}
+
+//Context Type:
+interface ContextValue {
+    dataSources: {
+        booksAPI: BooksAPI
+    }
+}
+//Define Schema
+const typeDefs = `
+type Book {
+    title:String
+    author:String
+}
+
+type Query {
+    "GET all Books from the Rest api server"
+    books:[Book!]
+}
+
+`
+
+//Define Resolver
+const resolvers = {
+    //Query
+    Query: {
+        async books(parent, args, contextValue, info) {
+            const { dataSources } = contextValue
+            return dataSources.booksAPI.getBooks()
+        }
+    }
+}
+const server = new ApolloServer<ContextValue>({
+    typeDefs,
+    resolvers,
+})
+
+//start the webserver and deploy
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    },
+    context: async () => {
+        return {
+            dataSources: {
+                booksAPI: new BooksAPI()  // dataSources.booksAPI.getBooks()
+            }
+        }
+    }
+})
+....................................................................................
+			Graphql with Next js Integration
+.....................................................................................
+
+
+Apollo has released "Apollo client Lib with Next.js 13 onwards".
+
+Lib:
+ This lib now is under experimental, in future it will be stablished..
+
+@apollo/experimental-nextjs-app-support.
+
+Next 13 Compoent types
+
+1.Server Component
+2.Client Component
+
+Apollo provides wrapper for both components...
+
+How to start?
+
+1.Create next.js 14 version project 
+
+2.install the dependencies
+  
+  npm install @apollo/client@alpha  @apollo/experimental-nextjs-app-support
+
+3.Configuration:
+ How to talk to GraphQL server?
+  GraphQl end point , GraphQL client object
+
+projectRootDir/lib/client.js
+
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { registerApolloClient } from "@apollo/experimental-nextjs-app-support/rsc";
+
+export const { getClient } = registerApolloClient(() => {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new HttpLink({
+      // uri: "https://countries.trevorblades.com",
+      uri: "http://localhost:4000/"
+    }),
+  });
+});
+
+4.Query Data from the GraphQL server...
+
+import { getClient } from "../../lib/client";
+import { gql } from "@apollo/client";
+
+//Query creation using "gql function from the Apollo Client"
+const query = gql`query getBooks {
+      books {
+         author
+         title
+      }        
+}`
+export default async function Page() {
+  const { data: { books } } = await getClient().query({ query });
+  return <main>
+    <ul>
+      {books.map(book => {
+        return <li>{book.author} - {'title'} - {book.title} </li>
+      })}
+    </ul>
+  </main>
+}
+
+
+
+
+
+
 
 
 

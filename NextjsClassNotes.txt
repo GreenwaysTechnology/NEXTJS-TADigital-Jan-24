@@ -437,7 +437,7 @@ dynamic functions:
 
 dynamic rendering can be triggered by "data change in the api" or dynamic functions.
 
-->coookies
+->cookies
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 			ISR - Caching,revalidation
 ....................................................................................
